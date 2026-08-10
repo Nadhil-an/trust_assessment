@@ -144,6 +144,7 @@
         <button class="nav-item" onclick="switchView('memberships', this)">🤝 Memberships</button>
         <button class="nav-item" onclick="switchView('donations', this)">💝 Donations</button>
         <button class="nav-item" onclick="switchView('volunteers', this)">👥 Volunteers</button>
+        <button class="nav-item" onclick="switchView('daybook', this)">📒 Day Book</button>
       </nav>
 
       <div class="sidebar-footer">
@@ -334,6 +335,53 @@
             <div class="ad-loading"><div class="ad-spinner"></div> Loading volunteers...</div>
           </div>
         </div> <!-- End Volunteers View -->
+
+        <!-- DAY BOOK VIEW -->
+        <div id="view-daybook" class="app-view">
+          <!-- Header -->
+          <div class="ad-section-header" style="margin-bottom:18px">
+            <div class="ad-section-title">📒 Day Book</div>
+          </div>
+
+          <!-- Date Range Filter -->
+          <div style="background:var(--ad-card);border:1px solid var(--ad-border);border-radius:14px;padding:16px 18px;margin-bottom:20px;display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;">
+            <div>
+              <label style="display:block;font-size:0.72rem;font-weight:700;color:var(--ad-green);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">From Date</label>
+              <input type="date" id="dbFromDate" class="ad-input" style="min-height:40px;background:var(--ad-bg);color:var(--ad-text);font-size:0.9rem" onchange="renderDayBook()">
+            </div>
+            <div>
+              <label style="display:block;font-size:0.72rem;font-weight:700;color:var(--ad-green);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">To Date</label>
+              <input type="date" id="dbToDate" class="ad-input" style="min-height:40px;background:var(--ad-bg);color:var(--ad-text);font-size:0.9rem" onchange="renderDayBook()">
+            </div>
+            <button class="ad-btn ad-btn-outline" style="min-height:40px;padding:0 18px" onclick="dbSetToday()">📅 Today</button>
+            <button class="ad-btn ad-btn-outline" style="min-height:40px;padding:0 18px" onclick="dbSetThisMonth()">📆 This Month</button>
+            <button class="ad-btn ad-btn-outline" style="min-height:40px;padding:0 18px" onclick="dbClearFilter()">✕ All Time</button>
+          </div>
+
+          <!-- Summary Cards -->
+          <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:22px" id="dbSummaryCards">
+            <div class="stat-card" style="background:linear-gradient(135deg,#1a3a2a,#0f2318);border-color:var(--ad-green)">
+              <div class="stat-icon" style="background:rgba(76,175,132,0.2);color:var(--ad-green)">💰</div>
+              <div class="stat-val" id="dbTotalAmount" style="color:var(--ad-green);font-size:1.6rem">₹0</div>
+              <div class="stat-label" style="color:var(--ad-muted)">Total Collection</div>
+            </div>
+            <div class="stat-card" style="background:linear-gradient(135deg,#2a1a3a,#180f23);border-color:#CE93D8">
+              <div class="stat-icon" style="background:rgba(206,147,216,0.2);color:#CE93D8">🤝</div>
+              <div class="stat-val" id="dbMemAmount" style="color:#CE93D8;font-size:1.6rem">₹0</div>
+              <div class="stat-label" style="color:var(--ad-muted)">Membership Collection</div>
+            </div>
+            <div class="stat-card" style="background:linear-gradient(135deg,#3a2a1a,#231a0f);border-color:#FFD54F">
+              <div class="stat-icon" style="background:rgba(255,213,79,0.2);color:#FFD54F">💝</div>
+              <div class="stat-val" id="dbDonAmount" style="color:#FFD54F;font-size:1.6rem">₹0</div>
+              <div class="stat-label" style="color:var(--ad-muted)">Donation Collection</div>
+            </div>
+          </div>
+
+          <!-- Transaction List -->
+          <div id="dbTransactionList">
+            <div class="ad-loading"><div class="ad-spinner"></div> Loading transactions...</div>
+          </div>
+        </div> <!-- End Day Book View -->
 
       </div>
     </main>
@@ -770,11 +818,10 @@
       const vDash = document.getElementById('view-dashboard');
       const vRep  = document.getElementById('view-reports');
       const vVol  = document.getElementById('view-volunteers');
+      const vDB   = document.getElementById('view-daybook');
 
       // Hide all views first
-      vDash.classList.remove('active');
-      vRep.classList.remove('active');
-      vVol.classList.remove('active');
+      [vDash, vRep, vVol, vDB].forEach(v => v.classList.remove('active'));
 
       if (tab === 'dashboard') {
         vDash.classList.add('active');
@@ -783,6 +830,10 @@
         vVol.classList.add('active');
         title.textContent = '👥 Registered Volunteers';
         renderVolunteersList();
+      } else if (tab === 'daybook') {
+        vDB.classList.add('active');
+        title.textContent = '📒 Day Book';
+        renderDayBook();
       } else {
         vRep.classList.add('active');
         currentAdminTab = tab;
@@ -969,6 +1020,153 @@
           }
         }
       );
+    }
+
+    /* ─── Day Book ────────────────────────────────────────── */
+    function dbSetToday() {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('dbFromDate').value = today;
+      document.getElementById('dbToDate').value = today;
+      renderDayBook();
+    }
+
+    function dbSetThisMonth() {
+      const now = new Date();
+      const from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+      const to   = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+      document.getElementById('dbFromDate').value = from;
+      document.getElementById('dbToDate').value = to;
+      renderDayBook();
+    }
+
+    function dbClearFilter() {
+      document.getElementById('dbFromDate').value = '';
+      document.getElementById('dbToDate').value = '';
+      renderDayBook();
+    }
+
+    function dbDateInRange(dateVal) {
+      const from = document.getElementById('dbFromDate').value;
+      const to   = document.getElementById('dbToDate').value;
+      if (!dateVal) return true;
+      const d = new Date(dateVal).toISOString().split('T')[0];
+      if (from && d < from) return false;
+      if (to   && d > to  ) return false;
+      return true;
+    }
+
+    function renderDayBook() {
+      const panel = document.getElementById('dbTransactionList');
+      const from  = document.getElementById('dbFromDate').value;
+      const to    = document.getElementById('dbToDate').value;
+
+      // Filter memberships
+      const filteredMem = allMemberships.filter(m => {
+        const d = m.submittedAt || m.localDate || null;
+        return dbDateInRange(d);
+      });
+
+      // Filter donations
+      const filteredDon = allDonations.filter(d => {
+        const dt = d.submittedAt || d.localDate || null;
+        return dbDateInRange(dt);
+      });
+
+      // Totals
+      const memTotal = filteredMem.reduce((s, m) => s + (Number(m.amount) || 0), 0);
+      const donTotal = filteredDon.reduce((s, d) => s + (Number(d.amount) || 0), 0);
+      const grandTotal = memTotal + donTotal;
+
+      document.getElementById('dbTotalAmount').textContent = '₹' + grandTotal.toLocaleString('en-IN');
+      document.getElementById('dbMemAmount').textContent   = '₹' + memTotal.toLocaleString('en-IN');
+      document.getElementById('dbDonAmount').textContent   = '₹' + donTotal.toLocaleString('en-IN');
+
+      // Merge all transactions
+      const allTxns = [
+        ...filteredMem.map(m => ({ ...m, _type: 'membership', _date: m.submittedAt || m.localDate })),
+        ...filteredDon.map(d => ({ ...d, _type: 'donation',   _date: d.submittedAt || d.localDate })),
+      ];
+
+      if (!allTxns.length) {
+        panel.innerHTML = `<div class="ad-empty"><div class="ad-empty-icon">📒</div><h3>No Transactions Found</h3><p>${from || to ? 'No records for the selected date range.' : 'No memberships or donations recorded yet.'}</p></div>`;
+        return;
+      }
+
+      // Sort by date descending
+      allTxns.sort((a, b) => new Date(b._date || 0) - new Date(a._date || 0));
+
+      // Group by staff
+      const byStaff = {};
+      allTxns.forEach(txn => {
+        const key = txn.staffPhone || 'unknown';
+        if (!byStaff[key]) byStaff[key] = { name: txn.staffName || 'Unknown', phone: txn.staffPhone || '', txns: [] };
+        byStaff[key].txns.push(txn);
+      });
+
+      let html = '';
+      Object.values(byStaff).forEach(staff => {
+        const staffMem = staff.txns.filter(t => t._type === 'membership').reduce((s, t) => s + (Number(t.amount) || 0), 0);
+        const staffDon = staff.txns.filter(t => t._type === 'donation').reduce((s, t)  => s + (Number(t.amount) || 0), 0);
+        const staffTotal = staffMem + staffDon;
+
+        html += `
+        <div style="margin-bottom:24px">
+          <!-- Staff Header -->
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+            background:var(--ad-card);border:1px solid var(--ad-border);
+            border-radius:12px 12px 0 0;padding:14px 18px;">
+            <div style="display:flex;align-items:center;gap:12px">
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;
+                border-radius:50%;background:var(--ad-green);color:#fff;font-weight:800;font-size:1.1rem;flex-shrink:0">
+                ${(staff.name || '?')[0].toUpperCase()}
+              </span>
+              <div>
+                <div style="font-weight:800;font-size:1rem;color:var(--ad-text)">${staff.name}</div>
+                <div style="font-size:0.8rem;color:var(--ad-muted)">📱 ${staff.phone} &nbsp;·&nbsp; ${staff.txns.length} transaction${staff.txns.length !== 1 ? 's' : ''}</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;flex-wrap:wrap">
+              <span style="font-size:0.8rem;color:#CE93D8;font-weight:700">🤝 ₹${staffMem.toLocaleString('en-IN')}</span>
+              <span style="font-size:0.8rem;color:#FFD54F;font-weight:700">💝 ₹${staffDon.toLocaleString('en-IN')}</span>
+              <span style="font-size:0.9rem;color:var(--ad-green);font-weight:800">Total: ₹${staffTotal.toLocaleString('en-IN')}</span>
+            </div>
+          </div>
+
+          <!-- Transactions -->
+          <div style="border:1px solid var(--ad-border);border-top:none;border-radius:0 0 12px 12px;overflow:hidden">`;
+
+        staff.txns.forEach((txn, idx) => {
+          const isMem = txn._type === 'membership';
+          const color = isMem ? '#CE93D8' : '#FFD54F';
+          const icon  = isMem ? '🤝' : '💝';
+          const label = isMem ? txn.memberName  : txn.donorName;
+          const payBadge = txn.paymentMethod === 'gpay'
+            ? `<img src="gpay.png" style="height:12px;vertical-align:middle"> GPay`
+            : '💵 Cash';
+          const dt  = txn._date ? formatDateTime(txn._date) : '—';
+
+          html += `
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;
+            padding:12px 18px;background:var(--ad-bg);
+            ${idx < staff.txns.length - 1 ? 'border-bottom:1px solid var(--ad-border);' : ''}">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:1.2rem">${icon}</span>
+              <div>
+                <div style="font-weight:700;color:var(--ad-text);font-size:0.95rem">${label || '—'}</div>
+                <div style="font-size:0.78rem;color:var(--ad-muted)">${dt}</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px">
+              <span style="font-size:0.8rem;color:var(--ad-muted)">${payBadge}</span>
+              <span style="font-weight:800;font-size:1rem;color:${color}">₹${(Number(txn.amount)||0).toLocaleString('en-IN')}</span>
+            </div>
+          </div>`;
+        });
+
+        html += `</div></div>`;
+      });
+
+      panel.innerHTML = html;
     }
 
     /* ─── Report Detail Modal ───────────────────────────────── */
