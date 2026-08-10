@@ -479,7 +479,7 @@ function startVoice(catId) {
   const textarea = document.getElementById('notes_' + catId);
   const voiceBtn = document.getElementById('voiceBtn_' + catId);
   const voiceInd = document.getElementById('voiceInd_' + catId);
-  let finalTranscript = textarea.value;
+  let initialTranscript = textarea.value;
 
   recognition.onstart = () => {
     activeVoiceId = catId;
@@ -489,16 +489,18 @@ function startVoice(catId) {
   };
 
   recognition.onresult = (e) => {
-    let interim = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) {
+    let finalStr = '';
+    let interimStr = '';
+    for (let i = 0; i < e.results.length; i++) {
       if (e.results[i].isFinal) {
-        finalTranscript += e.results[i][0].transcript + ' ';
+        finalStr += e.results[i][0].transcript + ' ';
       } else {
-        interim += e.results[i][0].transcript;
+        interimStr += e.results[i][0].transcript;
       }
     }
-    textarea.value = finalTranscript + interim;
-    selectedCats[catId].notes = finalTranscript + interim;
+    const resultText = (initialTranscript + ' ' + finalStr + interimStr).trim();
+    textarea.value = resultText;
+    selectedCats[catId].notes = resultText;
   };
 
   recognition.onerror = (e) => {
