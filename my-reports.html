@@ -128,6 +128,12 @@
   </div>
 </div>
 
+<!-- ══════════ FULL SCREEN IMAGE PREVIEW ══════════ -->
+<div id="imagePreviewModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; align-items:center; justify-content:center; flex-direction:column;">
+  <button onclick="document.getElementById('imagePreviewModal').style.display='none'" style="position:absolute; top:20px; right:20px; background:none; border:none; color:white; font-size:2.5rem; cursor:pointer;">✕</button>
+  <img id="imagePreviewSrc" style="max-width:95%; max-height:95%; object-fit:contain; border-radius:8px;">
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
@@ -404,7 +410,7 @@ function openDetail(idx) {
     html += `<div style="padding:12px 16px 4px;font-weight:800;font-size:0.875rem;color:var(--text-mid);text-transform:uppercase;letter-spacing:.05em">${t('photos')}</div>`;
     html += `<div class="photo-row">`;
     r.photos.forEach(src => {
-      html += `<img src="${src}" alt="Visit photo" onclick="window.open('${src}','_blank')" style="cursor:pointer" loading="lazy">`;
+      html += `<img src="${src}" alt="Visit photo" onclick="openImagePreview(this.src)" style="cursor:pointer" loading="lazy">`;
     });
     html += `</div>`;
   }
@@ -423,6 +429,11 @@ function openDetail(idx) {
 
 function closeDetail() {
   document.getElementById('detailModal').classList.remove('show');
+}
+
+function openImagePreview(src) {
+  document.getElementById('imagePreviewSrc').src = src;
+  document.getElementById('imagePreviewModal').style.display = 'flex';
 }
 
 function onLangChange() { renderCurrentTab(); }
