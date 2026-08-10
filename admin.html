@@ -1162,6 +1162,9 @@
           const payBadge = txn.paymentMethod === 'gpay'
             ? `<span style="display:inline-flex;align-items:center;gap:6px;background:#f8f9fa;border:1px solid var(--ad-border);color:var(--ad-text);padding:3px 8px;border-radius:6px;font-size:0.75rem;font-weight:700;box-shadow:0 2px 4px rgba(0,0,0,0.02)"><img src="gpay.png" style="height:12px;object-fit:contain"> GPay</span>`
             : `<span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,160,0,0.1);border:1px solid rgba(255,160,0,0.2);color:#F57C00;padding:3px 8px;border-radius:6px;font-size:0.75rem;font-weight:700;box-shadow:0 2px 4px rgba(0,0,0,0.02)">💵 Cash</span>`;
+          const typeBadge = isMem
+            ? `<span style="font-size:0.7rem;font-weight:700;color:#AB47BC;background:rgba(171,71,188,0.1);padding:3px 6px;border-radius:4px;border:1px solid rgba(171,71,188,0.2)">Membership</span>`
+            : `<span style="font-size:0.7rem;font-weight:700;color:#F57C00;background:rgba(245,124,0,0.1);padding:3px 6px;border-radius:4px;border:1px solid rgba(245,124,0,0.2)">Donation</span>`;
           const dt  = txn._date ? formatDateTime(txn._date) : '—';
 
           html += `
@@ -1175,7 +1178,8 @@
                 <div style="font-size:0.8rem;color:var(--ad-muted);margin-top:2px">${dt}</div>
               </div>
             </div>
-            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end">
+              ${typeBadge}
               ${payBadge}
               <span style="font-weight:800;font-size:1.1rem;color:${color}">₹${(Number(txn.amount)||0).toLocaleString('en-IN')}</span>
               <button class="ad-btn ad-btn-outline" style="min-height:32px;padding:0 8px;border-color:#ef5350;color:#ef5350" title="Delete Transaction" onclick="deleteTransaction('${txn.id}', '${txn._type}')">
