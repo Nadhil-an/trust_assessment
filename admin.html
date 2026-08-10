@@ -819,8 +819,21 @@
     }
 
     function switchView(tab, btn) {
+      // If btn is not passed (called from cards), find the matching sidebar nav button
+      if (!btn) {
+        const allNavItems = document.querySelectorAll('.nav-item');
+        allNavItems.forEach(b => {
+          if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(`'${tab}'`)) {
+            btn = b;
+          }
+        });
+      }
       document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+      if (btn) btn.classList.add('active');
+      
+      // Also close sidebar on mobile
+      document.getElementById('appSidebar').classList.remove('open');
+      document.getElementById('sidebarOverlay').classList.remove('show');
       
       const title = document.getElementById('topNavTitle');
       const vDash = document.getElementById('view-dashboard');
