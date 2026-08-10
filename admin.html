@@ -124,40 +124,58 @@
   </div>
 
   <!-- ══════════ ADMIN DASHBOARD ══════════ -->
-  <div id="dashboardScreen" style="display:none">
+  <div id="dashboardScreen" style="display:none" class="app-layout">
+    
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
-    <!-- Header -->
-    <div class="ad-header">
-      <div class="ad-brand">
-        <div
-          style="background:white; padding:4px 8px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
-          <img src="logo.png" alt="Sree Lakshmi Trust" style="height:32px;width:auto;display:block;">
+    <!-- Sidebar -->
+    <aside class="app-sidebar" id="appSidebar">
+      <div class="sidebar-header">
+        <div style="background:white; padding:4px 8px; border-radius:6px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+          <img src="logo.png" alt="Sree Lakshmi Trust" style="height:28px;width:auto;display:block;">
         </div>
-        <div>
-          <div class="ad-brand-name">Sree Lakshmi Trust</div>
-          <div class="ad-brand-sub" data-i18n="adminTitle">Admin Dashboard</div>
-        </div>
+        <div class="ad-brand-name" style="font-size:1.1rem">Sree Lakshmi Trust</div>
       </div>
-      <div class="ad-header-actions">
-        <div class="ad-lang-toggle">
-          <button class="ad-lang-btn active" data-lang="en" onclick="setLanguage('en')">EN</button>
-          <button class="ad-lang-btn" data-lang="ml" onclick="setLanguage('ml')">മ</button>
+      
+      <nav class="sidebar-nav">
+        <button class="nav-item active" onclick="switchView('dashboard', this)">📊 Dashboard Overview</button>
+        <button class="nav-item" onclick="switchView('assessments', this)">📋 Assessments</button>
+        <button class="nav-item" onclick="switchView('memberships', this)">🤝 Memberships</button>
+        <button class="nav-item" onclick="switchView('donations', this)">💝 Donations</button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="ad-lang-toggle" style="margin-bottom:12px; width:100%">
+          <button class="ad-lang-btn active" style="flex:1" data-lang="en" onclick="setLanguage('en')">EN</button>
+          <button class="ad-lang-btn" style="flex:1" data-lang="ml" onclick="setLanguage('ml')">മ</button>
+        </div>
+        <button class="ad-btn ad-btn-ghost" style="width:100%; justify-content:center;" onclick="doLogout()">
+          <span data-i18n="logoutAdmin">Logout</span>
+        </button>
+      </div>
+    </aside>
+
+    <main class="app-main">
+      <!-- Header -->
+      <div class="ad-header">
+        <div style="display:flex; align-items:center; gap:12px">
+          <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+          <h2 class="ad-brand-name" id="topNavTitle" style="margin:0">Dashboard Overview</h2>
         </div>
         <button class="ad-btn ad-btn-outline" onclick="exportAll()">
           <span data-i18n="exportCSV">📥 Export CSV</span>
         </button>
-        <button class="ad-btn ad-btn-ghost" onclick="doLogout()">
-          <span data-i18n="logoutAdmin">Logout</span>
-        </button>
       </div>
-    </div>
 
-    <div id="adToast"></div>
+      <div id="adToast"></div>
 
-    <div class="ad-body ad-container">
-
-      <!-- ─── Stats Cards ─── -->
-      <div class="stats-grid" id="statsGrid">
+      <div class="ad-body ad-container">
+        
+        <!-- DASHBOARD VIEW -->
+        <div id="view-dashboard" class="app-view active">
+          <!-- ─── Stats Cards ─── -->
+          <div class="stats-grid" id="statsGrid">
         <div class="stat-card green">
           <div class="stat-icon">📋</div>
           <div class="stat-val" id="statTotal">—</div>
@@ -271,39 +289,39 @@
       ">✕ Show All</button>
       </div>
 
-      <!-- ─── Reports Panel ─── -->
-      <div class="ad-section-header" style="margin-top:4px">
-        <div class="ad-section-title">📋 <span id="reportsPanelTitle">All Reports</span></div>
-        <div class="ad-filter-row">
-          <button class="filter-btn active" onclick="setFilter('all',this)" data-i18n="filterAll">All Time</button>
-          <button class="filter-btn" onclick="setFilter('today',this)" data-i18n="filterToday">Today</button>
-          <button class="filter-btn" onclick="setFilter('week',this)" data-i18n="filterWeek">This Week</button>
-          <button class="filter-btn" onclick="setFilter('month',this)" data-i18n="filterMonth">This Month</button>
-        </div>
-      </div>
+        </div> <!-- End Dashboard View -->
 
-      <!-- Search & Category Filter -->
-      <div style="margin-bottom:16px; display:flex; gap:10px; flex-wrap:wrap;">
-        <input type="text" id="searchInput" class="ad-input" data-i18n-ph="searchPlaceholder"
-          placeholder="Search by name, village, category..." oninput="renderReportsList()" style="flex:1; min-width:200px;">
-        <select id="categoryFilter" class="ad-input" style="flex:1; min-width:200px; background:var(--ad-bg); color:var(--ad-text)" onchange="renderReportsList()">
-          <option value="">🏷️ All Problem Categories</option>
-        </select>
-      </div>
+        <!-- REPORTS VIEW -->
+        <div id="view-reports" class="app-view">
+          <!-- ─── Reports Panel ─── -->
+          <div class="ad-section-header" style="margin-top:4px; margin-bottom:12px;">
+            <div class="ad-section-title">📋 <span id="reportsPanelTitle">All Reports</span></div>
+            <div class="ad-filter-row">
+              <button class="filter-btn active" onclick="setFilter('all',this)" data-i18n="filterAll">All Time</button>
+              <button class="filter-btn" onclick="setFilter('today',this)" data-i18n="filterToday">Today</button>
+              <button class="filter-btn" onclick="setFilter('week',this)" data-i18n="filterWeek">This Week</button>
+              <button class="filter-btn" onclick="setFilter('month',this)" data-i18n="filterMonth">This Month</button>
+            </div>
+          </div>
 
-      <!-- Tabs -->
-      <div class="ad-tab-bar">
-        <button class="ad-tab-btn active" onclick="setAdminTab('assessments', this)">📋 Assessments</button>
-        <button class="ad-tab-btn" onclick="setAdminTab('memberships', this)">🤝 Memberships</button>
-        <button class="ad-tab-btn" onclick="setAdminTab('donations', this)">💝 Donations</button>
-      </div>
+          <!-- Search & Category Filter -->
+          <div style="margin-bottom:16px; display:flex; gap:10px; flex-wrap:wrap;">
+            <input type="text" id="searchInput" class="ad-input" data-i18n-ph="searchPlaceholder"
+              placeholder="Search by name, village, category..." oninput="renderReportsList()" style="flex:1; min-width:200px;">
+            <select id="categoryFilter" class="ad-input" style="flex:1; min-width:200px; background:var(--ad-bg); color:var(--ad-text)" onchange="renderReportsList()">
+              <option value="">🏷️ All Problem Categories</option>
+            </select>
+          </div>
 
-      <div class="reports-panel" id="reportsPanel">
-        <div class="ad-loading">
-          <div class="ad-spinner"></div> Loading reports...
-        </div>
+          <div class="reports-panel" id="reportsPanel">
+            <div class="ad-loading">
+              <div class="ad-spinner"></div> Loading reports...
+            </div>
+          </div>
+        </div> <!-- End Reports View -->
+
       </div>
-    </div>
+    </main>
   </div>
 
   <!-- ══════════ REPORT DETAIL MODAL ══════════ -->
@@ -684,15 +702,53 @@
       });
     }
 
-    function setAdminTab(tab, btn) {
-      currentAdminTab = tab;
-      document.querySelectorAll('.ad-tab-btn').forEach(b => b.classList.remove('active'));
+    function toggleSidebar() {
+      const sb = document.getElementById('appSidebar');
+      const ov = document.getElementById('sidebarOverlay');
+      if (sb.classList.contains('open')) {
+        sb.classList.remove('open');
+        ov.classList.remove('show');
+      } else {
+        sb.classList.add('open');
+        ov.classList.add('show');
+      }
+    }
+
+    function switchView(tab, btn) {
+      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       
-      // Hide category filter on Memberships/Donations tabs
-      document.getElementById('categoryFilter').style.display = (tab === 'assessments') ? 'block' : 'none';
+      const vDash = document.getElementById('view-dashboard');
+      const vRep  = document.getElementById('view-reports');
+      const title = document.getElementById('topNavTitle');
+
+      if (tab === 'dashboard') {
+        vDash.classList.add('active');
+        vRep.classList.remove('active');
+        title.textContent = 'Dashboard Overview';
+      } else {
+        vDash.classList.remove('active');
+        vRep.classList.add('active');
+        
+        currentAdminTab = tab;
+        const catFilter = document.getElementById('categoryFilter');
+        
+        if (tab === 'assessments') {
+           title.textContent = '📋 Assessment Reports';
+           catFilter.style.display = 'block';
+        } else if (tab === 'memberships') {
+           title.textContent = '🤝 Memberships';
+           catFilter.style.display = 'none';
+        } else if (tab === 'donations') {
+           title.textContent = '💝 Donations';
+           catFilter.style.display = 'none';
+        }
+        renderReportsList();
+      }
       
-      renderReportsList();
+      // Close sidebar on mobile
+      document.getElementById('appSidebar').classList.remove('open');
+      document.getElementById('sidebarOverlay').classList.remove('show');
     }
 
     function renderReportsList() {
