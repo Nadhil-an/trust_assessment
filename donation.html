@@ -116,6 +116,13 @@
       <textarea id="donNotes" class="form-textarea" placeholder="Any additional notes about this donation..." style="min-height:80px;margin-bottom:0"></textarea>
     </div>
 
+    <!-- Photo Upload Section -->
+    <div class="form-section">
+      <div class="form-section-title">📷 Receipt / Photo (Optional)</div>
+      <div class="photo-grid" id="photoGrid"></div>
+      <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" multiple>
+    </div>
+
     <!-- Submit -->
     <button class="btn btn-primary btn-lg" onclick="submitDonation()" style="margin-bottom:24px">
       💝 Save Donation
@@ -146,12 +153,54 @@
 <script>
 let selectedPayMethod = 'gpay';
 let selectedInterest  = 'medium';
+let photos = [];
 
 document.addEventListener('DOMContentLoaded', () => {
   const user = getUser();
   if (!user) { window.location.href = 'index.html'; return; }
   applyTranslations();
+  renderPhotoGrid();
 });
+
+function renderPhotoGrid() {
+  const grid = document.getElementById('photoGrid');
+  grid.innerHTML = '';
+  photos.forEach((src, i) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'photo-thumb';
+    thumb.innerHTML = `
+      <img src="${src}" alt="Photo ${i+1}" loading="lazy">
+      <button class="photo-remove" onclick="removePhoto(${i})">✕</button>`;
+    grid.appendChild(thumb);
+  });
+  if (photos.length < 3) {
+    const addBtn = document.createElement('div');
+    addBtn.className = 'photo-add';
+    addBtn.innerHTML = `<span class="photo-add-icon">📷</span><span>Add Photo</span>`;
+    addBtn.onclick = () => document.getElementById('photoInput').click();
+    grid.appendChild(addBtn);
+  }
+}
+
+document.getElementById('photoInput').addEventListener('change', async (e) => {
+  const files = Array.from(e.target.files || []);
+  showLoading('Compressing...');
+  for (const file of files) {
+    if (photos.length >= 3) break;
+    try {
+      const compressed = await compressImage(file, 1200, 1200, 0.75);
+      photos.push(compressed);
+    } catch { showToast('Could not process photo', 'error'); }
+  }
+  hideLoading();
+  renderPhotoGrid();
+  e.target.value = '';
+});
+
+function removePhoto(idx) {
+  photos.splice(idx, 1);
+  renderPhotoGrid();
+}
 
 function setPayMethod(val, btn) {
   selectedPayMethod = val;
@@ -179,6 +228,14 @@ async function submitDonation() {
   showLoading('Saving donation...');
   const user = getUser();
 
+  let photoUrls = [];
+  for (let i = 0; i < photos.length; i++) {
+    try {
+      const url = await uploadPhoto(photos[i], `don_${Date.now()}_${i}.jpg`);
+      photoUrls.push(url);
+    } catch { photoUrls.push(photos[i]); }
+  }
+
   const record = {
     type:          'donation',
     staffName:     user.name,
@@ -190,6 +247,7 @@ async function submitDonation() {
     interestLevel: selectedInterest,
     amount:        amount,
     notes:         notes,
+    photos:        photoUrls,
     submittedAt:   new Date().toISOString(),
     dateStr:       new Date().toISOString().split('T')[0],
   };
