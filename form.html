@@ -89,13 +89,18 @@
 
   <!-- ──── STEP 4: Photos ──── -->
   <div class="step" id="step4">
+    <div style="display:flex; gap:10px; margin-bottom:16px;">
+       <button type="button" class="btn btn-primary" style="flex:1; font-size:0.875rem" onclick="document.getElementById('photoInputCam').click()">📷 Take Photo</button>
+       <button type="button" class="btn btn-outline" style="flex:1; font-size:0.875rem" onclick="document.getElementById('photoInputGal').click()">🖼️ Gallery</button>
+    </div>
 
     <div class="photo-grid" id="photoGrid">
-      <!-- photo thumbnails + add button rendered by JS -->
+      <!-- photo thumbnails -->
     </div>
     <p class="form-hint" data-i18n="photoHint">You can add up to 5 photos</p>
-    <!-- Hidden file input -->
-    <input type="file" id="photoInput" accept="image/*" style="display:none" multiple>
+    <!-- Hidden file inputs -->
+    <input type="file" id="photoInputCam" accept="image/*" capture="environment" style="display:none" multiple>
+    <input type="file" id="photoInputGal" accept="image/*" style="display:none" multiple>
   </div>
 
   <!-- ──── STEP 5: Location ──── -->
@@ -481,17 +486,11 @@ function renderPhotoGrid() {
       <button class="photo-remove" onclick="removePhoto(${i})">✕</button>`;
     grid.appendChild(thumb);
   });
-  if (photos.length < 5) {
-    const addBtn = document.createElement('div');
-    addBtn.className = 'photo-add';
-    addBtn.innerHTML = `<span class="photo-add-icon">📷</span><span>${t('addPhotoBtn')}</span>`;
-    addBtn.onclick = () => document.getElementById('photoInput').click();
-    grid.appendChild(addBtn);
-  }
 }
 
-document.getElementById('photoInput').addEventListener('change', async (e) => {
+async function handlePhotoUpload(e) {
   const files = Array.from(e.target.files || []);
+  if (!files.length) return;
   showLoading(t('saving'));
   for (const file of files) {
     if (photos.length >= 5) break;
@@ -503,7 +502,10 @@ document.getElementById('photoInput').addEventListener('change', async (e) => {
   hideLoading();
   renderPhotoGrid();
   e.target.value = '';
-});
+}
+
+document.getElementById('photoInputCam').addEventListener('change', handlePhotoUpload);
+document.getElementById('photoInputGal').addEventListener('change', handlePhotoUpload);
 
 function removePhoto(idx) {
   photos.splice(idx, 1);
