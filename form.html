@@ -448,12 +448,16 @@ function startVoice(catId) {
   };
 
   recognition.onerror = (e) => {
+    if (e.error === 'no-speech') return; // Ignore silence errors, let onend restart
     showToast('Microphone error: ' + e.error, 'error');
     stopVoice();
   };
 
   recognition.onend = () => {
-    if (activeVoiceId === catId) stopVoice();
+    // If activeVoiceId is still set, it means the user didn't click Stop. Restart it!
+    if (activeVoiceId === catId && recognition) {
+      try { recognition.start(); } catch {}
+    }
   };
 
   recognition.start();
