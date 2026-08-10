@@ -219,9 +219,17 @@ async function fbDeleteUser(phone) {
 function fbListenAllUsers(callback) {
   if (!db) { callback([]); return () => {}; }
   return db.collection("users")
-    .orderBy("registeredAt", "desc")
     .onSnapshot(
-      snap => callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
+      snap => {
+        const users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        // Sort client-side so missing registeredAt docs still appear
+        users.sort((a, b) => {
+          const ta = a.registeredAt?.toMillis ? a.registeredAt.toMillis() : 0;
+          const tb = b.registeredAt?.toMillis ? b.registeredAt.toMillis() : 0;
+          return tb - ta;
+        });
+        callback(users);
+      },
       err => console.warn("fbListenAllUsers:", err.message)
     );
 }
