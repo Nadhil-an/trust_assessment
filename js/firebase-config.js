@@ -254,10 +254,15 @@ async function uploadPhoto(base64DataUrl, filename) {
     const res = await fetch(base64DataUrl);
     const blob = await res.blob();
     const ref = storage.ref(`photos/${Date.now()}_${filename}`);
-    await ref.put(blob);
-    return await ref.getDownloadURL();
+    
+    const uploadTask = ref.put(blob).then(() => ref.getDownloadURL());
+    const finalUrl = await Promise.race([
+      uploadTask,
+      new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 4500))
+    ]);
+    return finalUrl;
   } catch (e) {
-    console.warn("uploadPhoto:", e.message);
+    console.warn("uploadPhoto fallback:", e.message);
     return base64DataUrl; // Fallback to base64
   }
 }
