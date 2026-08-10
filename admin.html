@@ -545,8 +545,9 @@
       document.getElementById('statTotal').textContent = src.length;
       document.getElementById('statToday').textContent = src.filter(a => isToday(a.submittedAt || a.localDate)).length;
       document.getElementById('statWeek').textContent = src.filter(a => isThisWeek(a.submittedAt || a.localDate)).length;
-      // Unique staff
-      const uniqueStaff = new Set(allAssessments.map(a => a.staffPhone)).size;
+      // Unique staff across all modules
+      const staffMap = buildStaffMap();
+      const uniqueStaff = Object.keys(staffMap).length;
       document.getElementById('statStaff').textContent = uniqueStaff;
     }
 
