@@ -120,7 +120,8 @@
     <div class="form-section">
       <div class="form-section-title">📷 Receipt / Photo (Optional)</div>
       <div class="photo-grid" id="photoGrid"></div>
-      <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" multiple>
+      <p class="form-hint" style="margin-top:8px">You can add up to 5 photos</p>
+      <input type="file" id="photoInput" accept="image/*" style="display:none" multiple>
     </div>
 
     <!-- Submit -->
@@ -173,7 +174,7 @@ function renderPhotoGrid() {
       <button class="photo-remove" onclick="removePhoto(${i})">✕</button>`;
     grid.appendChild(thumb);
   });
-  if (photos.length < 3) {
+  if (photos.length < 5) {
     const addBtn = document.createElement('div');
     addBtn.className = 'photo-add';
     addBtn.innerHTML = `<span class="photo-add-icon">📷</span><span>Add Photo</span>`;
@@ -186,7 +187,7 @@ document.getElementById('photoInput').addEventListener('change', async (e) => {
   const files = Array.from(e.target.files || []);
   showLoading('Compressing...');
   for (const file of files) {
-    if (photos.length >= 3) break;
+    if (photos.length >= 5) break;
     try {
       const compressed = await compressImage(file, 1200, 1200, 0.75);
       photos.push(compressed);
