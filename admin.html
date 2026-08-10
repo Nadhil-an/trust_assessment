@@ -518,6 +518,7 @@
 
       unsubUsers = fbListenAllUsers((data) => {
         allUsers = data;
+        updateDashboardView();
         if (document.getElementById('view-volunteers').classList.contains('active')) {
           renderVolunteersList();
         }
@@ -545,9 +546,8 @@
       document.getElementById('statTotal').textContent = src.length;
       document.getElementById('statToday').textContent = src.filter(a => isToday(a.submittedAt || a.localDate)).length;
       document.getElementById('statWeek').textContent = src.filter(a => isThisWeek(a.submittedAt || a.localDate)).length;
-      // Unique staff across all modules
-      const staffMap = buildStaffMap();
-      const uniqueStaff = Object.keys(staffMap).length;
+      // Unique staff is the total number of registered volunteers
+      const uniqueStaff = allUsers.length;
       document.getElementById('statStaff').textContent = uniqueStaff;
     }
 
