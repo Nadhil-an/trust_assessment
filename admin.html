@@ -254,45 +254,48 @@
         </div>
       </div>
 
-      <!-- ─── Staff Filter Bar ─── -->
-      <div id="staffFilterBar" style="
-      background:var(--ad-card);border:1px solid var(--ad-border);border-radius:14px;
-      padding:16px 18px;margin-bottom:16px;
-      display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-    ">
-        <span style="font-size:1.1rem">👤</span>
-        <div style="flex:1;min-width:200px">
-          <label
-            style="display:block;font-size:0.75rem;font-weight:700;color:var(--ad-green);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Filter
-            by Staff Member</label>
-          <select id="staffDropdown" class="ad-input"
-            style="min-height:44px;background:var(--ad-bg);color:var(--ad-text)" onchange="onStaffDropdownChange()">
-            <option value="">👥 All Staff Members</option>
-          </select>
+      </div> <!-- End Dashboard View -->
+
+      <!-- REPORTS VIEW -->
+      <div id="view-reports" class="app-view">
+        
+        <!-- ─── Staff Filter Bar (Moved here so it shows above reports) ─── -->
+        <div id="staffFilterBar" style="
+        background:var(--ad-card);border:1px solid var(--ad-border);border-radius:14px;
+        padding:16px 18px;margin-bottom:16px;
+        display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+      ">
+          <span style="font-size:1.1rem">👤</span>
+          <div style="flex:1;min-width:200px">
+            <label
+              style="display:block;font-size:0.75rem;font-weight:700;color:var(--ad-green);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Filter
+              by Staff Member</label>
+            <select id="staffDropdown" class="ad-input"
+              style="min-height:44px;background:var(--ad-bg);color:var(--ad-text)" onchange="onStaffDropdownChange()">
+              <option value="">👥 All Staff Members</option>
+            </select>
+          </div>
+          <button class="ad-btn ad-btn-outline" onclick="clearStaffFilter()" id="clearFilterBtn"
+            style="min-height:44px;padding:0 18px;display:none">
+            ✕ Clear Filter
+          </button>
         </div>
-        <button class="ad-btn ad-btn-outline" onclick="clearStaffFilter()" id="clearFilterBtn"
-          style="min-height:44px;padding:0 18px;display:none">
-          ✕ Clear Filter
-        </button>
-      </div>
 
-      <!-- Active filter banner -->
-      <div id="activeFilterBanner" style="
-      display:none;background:rgba(76,175,132,0.12);border:1px solid var(--ad-green);
-      border-radius:10px;padding:10px 16px;margin-bottom:14px;
-      display:none;align-items:center;justify-content:space-between;gap:8px;
-    ">
-        <span id="activeFilterText" style="font-size:0.875rem;font-weight:700;color:var(--ad-green)"></span>
-        <button onclick="clearStaffFilter()" style="
-        background:transparent;border:1px solid var(--ad-green);border-radius:999px;
-        padding:4px 12px;color:var(--ad-green);font-size:0.75rem;font-weight:700;cursor:pointer
-      ">✕ Show All</button>
-      </div>
+        <!-- Active filter banner -->
+        <div id="activeFilterBanner" style="
+        display:none;background:rgba(76,175,132,0.12);border:1px solid var(--ad-green);
+        border-radius:10px;padding:10px 16px;margin-bottom:14px;
+        align-items:center;justify-content:space-between;gap:8px;
+      ">
+          <span id="activeFilterText" style="font-size:0.875rem;font-weight:700;color:var(--ad-green)"></span>
+          <button onclick="clearStaffFilter()" style="
+          background:transparent;border:1px solid var(--ad-green);border-radius:999px;
+          padding:4px 12px;color:var(--ad-green);font-size:0.75rem;font-weight:700;cursor:pointer
+        ">✕ Show All</button>
+        </div>
 
-        </div> <!-- End Dashboard View -->
 
-        <!-- REPORTS VIEW -->
-        <div id="view-reports" class="app-view">
+
           <!-- ─── Reports Panel ─── -->
           <div class="ad-section-header" style="margin-top:4px; margin-bottom:12px;">
             <div class="ad-section-title">📋 <span id="reportsPanelTitle">All Reports</span></div>
@@ -594,8 +597,15 @@
       updateStats();
       updateFinanceStats();
       renderReportsList();
-      // Scroll to reports
-      document.getElementById('staffFilterBar').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      
+      // If we are currently on the dashboard, auto-switch to Assessments to show the reports
+      const vDash = document.getElementById('view-dashboard');
+      if (selectedStaffPhone && vDash.classList.contains('active')) {
+         const assessBtn = document.querySelector('.sidebar-nav button:nth-child(2)');
+         switchView('assessments', assessBtn);
+      }
+      
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function clearStaffFilter() {
