@@ -167,6 +167,18 @@
   </div>
 </div>
 
+<!-- ══════════ CUSTOM CONFIRM MODAL ══════════ -->
+<div class="modal-bg" id="confirmModal" style="z-index: 10000;">
+  <div class="modal-box" style="padding: 24px; text-align: left;">
+    <h3 style="font-size:1.25rem;font-weight:800;margin-bottom:8px" id="confirmTitle">Confirm Action</h3>
+    <p style="font-size:0.95rem;color:var(--text-mid);margin-bottom:24px;line-height:1.5" id="confirmMessage"></p>
+    <div style="display:flex;gap:12px;justify-content:flex-end">
+      <button class="btn btn-outline" style="min-height:44px;padding:0 20px;flex:1" onclick="closeConfirmModal()">Cancel</button>
+      <button class="btn btn-primary" id="confirmActionBtn" style="min-height:44px;padding:0 20px;flex:1">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
@@ -636,11 +648,17 @@ function renderReview() {
 }
 
 /* ─── Submit ─────────────────────────────────────────────── */
-async function submitForm() {
+function submitForm() {
   if (isSubmitting) return;
-  if (!confirm(t('confirmSubmit'))) return;
-  isSubmitting = true;
-  showLoading(t('submitting'));
+  
+  openConfirmModal(
+    'Submit Assessment?',
+    t('confirmSubmit'),
+    '✅ Submit',
+    null,
+    async () => {
+      isSubmitting = true;
+      showLoading(t('submitting'));
 
   const user = getUser() || { name: 'Admin Edit', phone: 'Admin' };
   const cats = Object.values(selectedCats);
@@ -716,6 +734,8 @@ async function submitForm() {
   
   document.getElementById('successScreen').classList.add('show');
   applyTranslations();
+    }
+  );
 }
 
 /* ─── Language change ────────────────────────────────────── */
@@ -724,6 +744,34 @@ function onLangChange() {
   updateWizardUI();
   if (currentStep === 3) renderCatDetails();
   if (currentStep === 6) renderReview();
+}
+
+/* ─── Custom Confirm Modal Logic ─── */
+let confirmCallback = null;
+
+function openConfirmModal(title, message, btnText, btnColor, onConfirm) {
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMessage').innerHTML = message;
+  
+  const actionBtn = document.getElementById('confirmActionBtn');
+  actionBtn.innerHTML = btnText;
+  if (btnColor) actionBtn.style.background = btnColor;
+  else actionBtn.style.background = ''; // default primary
+  
+  // Remove old event listeners to prevent multiple fires
+  const newActionBtn = actionBtn.cloneNode(true);
+  actionBtn.parentNode.replaceChild(newActionBtn, actionBtn);
+  
+  newActionBtn.addEventListener('click', () => {
+    if (onConfirm) onConfirm();
+    closeConfirmModal();
+  });
+
+  document.getElementById('confirmModal').classList.add('show');
+}
+
+function closeConfirmModal() {
+  document.getElementById('confirmModal').classList.remove('show');
 }
 </script>
 </body>
