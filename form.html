@@ -188,18 +188,59 @@ let isSubmitting = false;
 let activeVoiceId = null;
 let recognition = null;
 
+let editDocId = null;
+let originalStaff = null;
+
 // Load custom categories from localStorage
 let customCats = JSON.parse(localStorage.getItem('trust_custom_cats') || '[]');
 
-document.addEventListener('DOMContentLoaded', () => {
-  // Require login
+document.addEventListener('DOMContentLoaded', async () => {
+  const params = new URLSearchParams(window.location.search);
+  const adminBypass = params.get('admin') === 'true';
+  editDocId = params.get('editId');
+
+  // Require login OR admin bypass
   const user = getUser();
-  if (!user) { window.location.href = 'index.html'; return; }
+  if (!user && !adminBypass) { window.location.href = 'index.html'; return; }
 
   // Set default date to today
   document.getElementById('visitDate').value = new Date().toISOString().split('T')[0];
 
   applyTranslations();
+
+  if (editDocId) {
+     showLoading('Loading report data...');
+     const r = await fbGetAssessmentById(editDocId);
+     if (r) {
+        originalStaff = { name: r.staffName, phone: r.staffPhone, createdAt: r.createdAt || null };
+        document.getElementById('personName').value = r.personName || '';
+        document.getElementById('personAge').value = r.age || '';
+        document.getElementById('personAddress').value = r.address || '';
+        document.getElementById('personVillage').value = r.village || '';
+        if (r.visitDate) document.getElementById('visitDate').value = r.visitDate;
+        
+        if (r.categories) {
+           r.categories.forEach(c => {
+             selectedCats[c.id] = c;
+             if (c.isCustom) {
+               if (!customCats.find(x => x.id === c.id)) customCats.push(c);
+             }
+           });
+           localStorage.setItem('trust_custom_cats', JSON.stringify(customCats));
+        }
+        if (r.photos) photos = r.photos;
+        if (r.locationLat) {
+           locationData = { lat: r.locationLat, lng: r.locationLng, address: r.locationAddress };
+           document.getElementById('locationBox').style.display = 'block';
+           document.getElementById('locationStatus').textContent = 'Loaded original location';
+           document.getElementById('locationAddress').textContent = locationData.address;
+        }
+     } else {
+        showToast('Report not found', 'error');
+     }
+     hideLoading();
+  }
+
   renderCategoryGrid();
   renderPhotoGrid();
   updateWizardUI();
@@ -215,7 +256,8 @@ function updateWizardUI() {
   document.getElementById('backBtn').style.display = currentStep > 1 ? 'flex' : 'none';
   const nextBtn = document.getElementById('nextBtn');
   if (currentStep === totalSteps) {
-    nextBtn.innerHTML = `<span data-i18n="submitBtn">${t('submitBtn')}</span>`;
+    const txt = editDocId ? 'Update Assessment' : t('submitBtn');
+    nextBtn.innerHTML = `<span>${txt}</span>`;
     nextBtn.style.flex = '3';
   } else {
     nextBtn.innerHTML = `<span data-i18n="next">${t('next')}</span>`;
@@ -600,28 +642,33 @@ async function submitForm() {
   isSubmitting = true;
   showLoading(t('submitting'));
 
-  const user = getUser();
+  const user = getUser() || { name: 'Admin Edit', phone: 'Admin' };
   const cats = Object.values(selectedCats);
 
-  // Upload photos
+  // Upload photos (skip if it's already a firebase URL)
   let photoUrls = [];
   for (let i = 0; i < photos.length; i++) {
-    try {
-      const url = await uploadPhoto(photos[i], `photo_${i}.jpg`);
-      photoUrls.push(url);
-    } catch { photoUrls.push(photos[i]); }
+    if (photos[i].startsWith('http')) {
+      photoUrls.push(photos[i]);
+    } else {
+      try {
+        const url = await uploadPhoto(photos[i], `photo_${i}.jpg`);
+        photoUrls.push(url);
+      } catch { photoUrls.push(photos[i]); }
+    }
   }
 
+  const sName = editDocId && originalStaff ? originalStaff.name : user.name;
+  const sPhone = editDocId && originalStaff ? originalStaff.phone : user.phone;
+
   const assessment = {
-    staffName:    user.name,
-    staffPhone:   user.phone,
+    staffName:    sName,
+    staffPhone:   sPhone,
     personName:   document.getElementById('personName').value.trim(),
     age:          document.getElementById('personAge').value || '',
     address:      document.getElementById('personAddress').value.trim(),
     village:      document.getElementById('personVillage').value.trim(),
     visitDate:    document.getElementById('visitDate').value,
-    submittedAt:  new Date().toISOString(),
-    localDate:    new Date().toISOString(),
     categories:   cats.map(c => ({
       id: c.id, icon: c.icon, label: c.label,
       severity: c.severity, notes: c.notes, isCustom: c.isCustom || false
@@ -631,23 +678,42 @@ async function submitForm() {
     locationLat:  locationData?.lat || null,
     locationLng:  locationData?.lng || null,
   };
+  
+  if (!editDocId) {
+    assessment.submittedAt = new Date().toISOString();
+    assessment.localDate = new Date().toISOString();
+  }
 
   try {
-    await fbSaveAssessment(assessment);
-    // Also save locally
-    const local = JSON.parse(localStorage.getItem('trust_my_reports') || '[]');
-    local.unshift({ ...assessment, id: 'local_' + Date.now() });
-    localStorage.setItem('trust_my_reports', JSON.stringify(local.slice(0, 100)));
-    // Also save to all_reports for admin demo
-    const all = JSON.parse(localStorage.getItem('trust_all_reports') || '[]');
-    all.unshift({ ...assessment, id: 'local_' + Date.now() });
-    localStorage.setItem('trust_all_reports', JSON.stringify(all.slice(0, 500)));
+    if (editDocId) {
+      await fbUpdateAssessment(editDocId, assessment);
+    } else {
+      await fbSaveAssessment(assessment);
+      // Also save locally for normal users
+      const local = JSON.parse(localStorage.getItem('trust_my_reports') || '[]');
+      local.unshift({ ...assessment, id: 'local_' + Date.now() });
+      localStorage.setItem('trust_my_reports', JSON.stringify(local.slice(0, 100)));
+      // Also save to all_reports for admin demo
+      const all = JSON.parse(localStorage.getItem('trust_all_reports') || '[]');
+      all.unshift({ ...assessment, id: 'local_' + Date.now() });
+      localStorage.setItem('trust_all_reports', JSON.stringify(all.slice(0, 500)));
+    }
   } catch (e) {
     console.error(e);
   }
 
   hideLoading();
   document.getElementById('formWrap').style.display = 'none';
+  
+  if (editDocId && new URLSearchParams(window.location.search).get('admin') === 'true') {
+     document.getElementById('successScreen').innerHTML = `
+       <div class="success-icon">✅</div>
+       <h2 class="success-title">Updated Successfully!</h2>
+       <p class="success-msg" style="margin-bottom:20px">The assessment report has been updated. You may close this tab.</p>
+       <button class="btn btn-primary btn-lg" onclick="window.close()" style="width:100%;max-width:320px;margin:0 auto">Close Window</button>
+     `;
+  }
+  
   document.getElementById('successScreen').classList.add('show');
   applyTranslations();
 }

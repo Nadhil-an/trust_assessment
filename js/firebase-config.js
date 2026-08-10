@@ -142,6 +142,58 @@ function fbListenAllAssessments(callback) {
     }, err => console.warn("fbListenAllAssessments:", err.message));
 }
 
+async function fbGetAssessmentById(id) {
+  if (!db) {
+    const all = JSON.parse(localStorage.getItem('trust_all_reports') || '[]');
+    return all.find(a => a.id === id) || null;
+  }
+  try {
+    const doc = await db.collection("assessments").doc(id).get();
+    return doc.exists ? { id: doc.id, ...doc.data() } : null;
+  } catch(e) {
+    console.warn("fbGetAssessmentById:", e.message);
+    return null;
+  }
+}
+
+async function fbUpdateAssessment(id, data) {
+  if (!db) {
+    let all = JSON.parse(localStorage.getItem('trust_all_reports') || '[]');
+    const idx = all.findIndex(a => a.id === id);
+    if (idx !== -1) {
+      all[idx] = { ...all[idx], ...data };
+      localStorage.setItem('trust_all_reports', JSON.stringify(all));
+    }
+    return true;
+  }
+  try {
+    await db.collection("assessments").doc(id).update({
+      ...data,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    return true;
+  } catch(e) {
+    console.warn("fbUpdateAssessment:", e.message);
+    return false;
+  }
+}
+
+async function fbDeleteAssessment(id) {
+  if (!db) {
+    let all = JSON.parse(localStorage.getItem('trust_all_reports') || '[]');
+    all = all.filter(a => a.id !== id);
+    localStorage.setItem('trust_all_reports', JSON.stringify(all));
+    return true;
+  }
+  try {
+    await db.collection("assessments").doc(id).delete();
+    return true;
+  } catch(e) {
+    console.warn("fbDeleteAssessment:", e.message);
+    return false;
+  }
+}
+
 async function fbGetAllUsers() {
   if (!db) return [];
   try {
