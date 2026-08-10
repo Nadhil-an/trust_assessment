@@ -2,7 +2,7 @@
 
 const TRANSLATIONS = {
   en: {
-    appName: "Sree Lakshmi Trust",
+    appName: "SreeLakshmi Trust",
     tagline: "Field Assessment Tool",
     welcome: "Welcome!",
     registerTitle: "Tell us who you are",
