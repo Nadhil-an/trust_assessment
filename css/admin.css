@@ -5,18 +5,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Malayalam:wght@400;500;600;700&display=swap');
 
 :root {
-  --ad-bg:      #0F1B14;
-  --ad-surface: #162018;
-  --ad-card:    #1E2D22;
-  --ad-border:  #2A3F2E;
-  --ad-green:   #4CAF84;
-  --ad-green-light: #6FCF97;
+  --ad-bg:      #F4F6FB;
+  --ad-surface: #FFFFFF;
+  --ad-card:    #FFFFFF;
+  --ad-border:  #C8D0E8;
+  --ad-green:   #1B2F6B;
+  --ad-green-light: #2541A8;
   --ad-gold:    #F5A623;
-  --ad-red:     #E57373;
+  --ad-red:     #E74C3C;
   --ad-blue:    #64B5F6;
-  --ad-text:    #E8F5EE;
-  --ad-muted:   #7A9985;
-  --ad-hover:   #253528;
+  --ad-text:    #1A1A2E;
+  --ad-muted:   #4A5480;
+  --ad-hover:   #EEF1FA;
   --font: 'Inter', 'Noto Sans Malayalam', sans-serif;
 }
 
@@ -42,12 +42,12 @@ body {
 .admin-login {
   min-height: 100vh; display: flex; flex-direction: column;
   align-items: center; justify-content: center; padding: 24px;
-  background: radial-gradient(ellipse at top, #1B4026 0%, #0F1B14 60%);
+  background: linear-gradient(135deg, #111E4A 0%, #1B2F6B 55%, #2541A8 100%);
 }
 .login-card {
   background: var(--ad-card); border: 1px solid var(--ad-border);
   border-radius: 20px; padding: 40px 32px; width: 100%; max-width: 400px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  box-shadow: 0 20px 60px rgba(27,47,107,0.2);
 }
 .login-icon { font-size: 3rem; text-align: center; margin-bottom: 16px; }
 .login-title { font-size: 1.5rem; font-weight: 800; text-align: center; margin-bottom: 4px; }
@@ -63,15 +63,15 @@ body {
   border-radius: 12px; color: var(--ad-text); font-size: 1rem;
   font-family: var(--font); outline: none; transition: all .2s;
 }
-.ad-input:focus { border-color: var(--ad-green); box-shadow: 0 0 0 3px rgba(76,175,132,0.15); }
+.ad-input:focus { border-color: var(--ad-green); box-shadow: 0 0 0 3px rgba(27,47,107,0.15); }
 .login-btn {
   width: 100%; min-height: 52px; border: none; border-radius: 12px;
-  background: linear-gradient(135deg, #1B6F3F, #28A060);
+  background: linear-gradient(135deg, #111E4A 0%, #1B2F6B 55%, #2541A8 100%);
   color: white; font-size: 1rem; font-weight: 700; cursor: pointer;
-  transition: all .2s; box-shadow: 0 4px 16px rgba(27,111,63,0.35);
+  transition: all .2s; box-shadow: 0 4px 16px rgba(27,47,107,0.35);
   display: flex; align-items: center; justify-content: center; gap: 8px;
 }
-.login-btn:hover  { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(27,111,63,0.45); }
+.login-btn:hover  { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(27,47,107,0.45); }
 .login-btn:active { transform: scale(0.98); }
 .login-err { color: var(--ad-red); font-size: 0.875rem; text-align: center; margin-top: 10px; display: none; }
 .login-err.show { display: block; }
@@ -94,7 +94,7 @@ body {
   border: none; border-radius: 10px; font-size: 0.875rem; font-weight: 700;
   cursor: pointer; transition: all .2s; min-height: 40px;
 }
-.ad-btn-primary { background: linear-gradient(135deg,#1B6F3F,#28A060); color: white; }
+.ad-btn-primary { background: linear-gradient(135deg, #111E4A 0%, #1B2F6B 55%, #2541A8 100%); color: white; }
 .ad-btn-outline { background: transparent; color: var(--ad-green); border: 2px solid var(--ad-border); }
 .ad-btn-outline:hover { border-color: var(--ad-green); }
 .ad-btn-ghost   { background: transparent; color: var(--ad-muted); border: 2px solid var(--ad-border); }
@@ -150,7 +150,7 @@ body {
   background: transparent; color: var(--ad-muted); font-size: 0.8rem; font-weight: 700;
   cursor: pointer; transition: all .2s;
 }
-.filter-btn.active { border-color: var(--ad-green); color: var(--ad-green); background: rgba(76,175,132,0.1); }
+.filter-btn.active { border-color: var(--ad-green); color: var(--ad-green); background: rgba(27,47,107,0.08); }
 
 /* ─── Staff Grid ─────────────────────────────────────────── */
 .staff-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; margin-bottom: 20px; }
@@ -163,11 +163,11 @@ body {
   cursor: pointer; transition: all .22s;
 }
 @media (min-width: 600px) { .staff-card { border-radius: 16px; padding: 18px 14px; } }
-.staff-card:hover  { border-color: var(--ad-green); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
-.staff-card.active { border-color: var(--ad-green); background: rgba(76,175,132,0.08); }
+.staff-card:hover  { border-color: var(--ad-green); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(27,47,107,0.15); }
+.staff-card.active { border-color: var(--ad-green); background: rgba(27,47,107,0.06); }
 .staff-avatar {
   width: 44px; height: 44px; border-radius: 50%; margin: 0 auto 10px;
-  background: linear-gradient(135deg,#1B6F3F,#28A060);
+  background: linear-gradient(135deg, #111E4A 0%, #1B2F6B 55%, #2541A8 100%);
   display: flex; align-items: center; justify-content: center;
   font-size: 1.2rem; font-weight: 800; color: white;
 }
@@ -177,7 +177,7 @@ body {
 .staff-phone { font-size: 0.7rem; color: var(--ad-muted); margin-bottom: 8px; }
 @media (min-width: 600px) { .staff-phone { font-size: 0.75rem; } }
 .staff-count {
-  display: inline-block; background: rgba(76,175,132,0.15);
+  display: inline-block; background: rgba(27,47,107,0.1);
   color: var(--ad-green); border-radius: 999px; padding: 2px 8px;
   font-size: 0.7rem; font-weight: 800;
 }
@@ -210,7 +210,7 @@ body {
 .ad-report-cats { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
 .ad-chip {
   padding: 2px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 700;
-  background: rgba(76,175,132,0.15); color: var(--ad-green);
+  background: rgba(27,47,107,0.1); color: var(--ad-green);
 }
 .ad-report-right { flex-shrink: 0; text-align: right; }
 .ad-report-date { font-size: 0.75rem; color: var(--ad-muted); margin-bottom: 4px; }
@@ -271,7 +271,7 @@ body {
 .ad-toast {
   background: var(--ad-card); border: 1px solid var(--ad-border); color: var(--ad-text);
   padding: 12px 18px; border-radius: 12px; font-size: 0.875rem; font-weight: 600;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4); display: flex; align-items: center;
+  box-shadow: 0 8px 24px rgba(27,47,107,0.2); display: flex; align-items: center;
   gap: 8px; pointer-events: all; animation: adToastIn .3s ease;
 }
 .ad-toast.success { border-color: var(--ad-green); }
