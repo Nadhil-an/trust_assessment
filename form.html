@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="description" content="Sree Lakshmi Trust — Field Assessment Form">
+  <title>New Assessment — Sree Lakshmi Trust</title>
+  <link rel="stylesheet" href="css/main.css">
+  <meta name="theme-color" content="#1B6F3F">
+  <style>
+    body { background: var(--bg); }
+    .form-wrap { max-width: 520px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; background: var(--bg); }
+    .custom-cat-modal input { margin-bottom: 12px; }
+    .photo-count-badge { background: var(--primary); color: white; border-radius: var(--r-full); padding: 2px 10px; font-size: 0.75rem; font-weight: 700; }
+  </style>
+</head>
+<body>
+
+<!-- Language Toggle -->
+<div class="lang-toggle">
+  <button class="lang-btn active" data-lang="en" onclick="setLanguage('en')">EN</button>
+  <button class="lang-btn" data-lang="ml" onclick="setLanguage('ml')">മ</button>
+</div>
+
+<div id="toastContainer"></div>
+<div id="loadingOverlay"><div class="spinner"></div><p data-i18n="loading">Loading...</p></div>
+
+<!-- ══════════ MAIN FORM WIZARD ══════════ -->
+<div class="form-wrap" id="formWrap">
+
+  <!-- Logo bar -->
+  <div style="background:var(--primary-dark);padding:10px 16px 10px;display:flex;align-items:center;gap:10px">
+    <div style="background:white; padding:4px 8px; border-radius:6px; display:inline-flex; align-items:center; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+      <img src="logo.png" alt="Sree Lakshmi Trust" style="height:28px;width:auto;display:block;">
+    </div>
+    <span style="color:white;font-weight:700;font-size:0.9375rem;">Sree Lakshmi Trust</span>
+    <a href="index.html" style="margin-left:auto;color:rgba(255,255,255,0.7);font-size:1.3rem;line-height:1">←</a>
+  </div>
+
+  <!-- Progress bar -->
+  <div class="wizard-bar" id="wizardBar">
+    <div class="wizard-top">
+      <span class="wizard-title" id="wizardTitle">Step 1</span>
+      <span class="wizard-count" id="wizardCount">1 / 6</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width:16.7%"></div>
+    </div>
+  </div>
+
+  <!-- ──── STEP 1: Basic Info ──── -->
+  <div class="step active" id="step1">
+
+    <div class="form-group">
+      <label class="form-label"><span data-i18n="patientName">Person / Household Name</span><span class="required">*</span></label>
+      <input id="personName" type="text" class="form-input" data-i18n-ph="patientNamePh" placeholder="Name of person visited" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label class="form-label"><span data-i18n="ageLabel">Age</span></label>
+      <input id="personAge" type="number" class="form-input" data-i18n-ph="agePh" placeholder="Age in years" min="0" max="120">
+    </div>
+    <div class="form-group">
+      <label class="form-label"><span data-i18n="addressLabel">Address</span></label>
+      <input id="personAddress" type="text" class="form-input" data-i18n-ph="addressPh" placeholder="House / Street address" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label class="form-label"><span data-i18n="villageLabel">Village / Ward</span></label>
+      <input id="personVillage" type="text" class="form-input" data-i18n-ph="villagePh" placeholder="Village or ward name" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label class="form-label"><span data-i18n="dateLabel">Visit Date</span><span class="required">*</span></label>
+      <input id="visitDate" type="date" class="form-input">
+    </div>
+  </div>
+
+  <!-- ──── STEP 2: Category Selection ──── -->
+  <div class="step" id="step2">
+    <div class="cat-grid" id="catGrid">
+      <!-- Built-in categories rendered by JS -->
+    </div>
+  </div>
+
+  <!-- ──── STEP 3: Category Details ──── -->
+  <div class="step" id="step3">
+    <div id="catDetails">
+      <!-- Rendered dynamically per selected category -->
+    </div>
+  </div>
+
+  <!-- ──── STEP 4: Photos ──── -->
+  <div class="step" id="step4">
+
+    <div class="photo-grid" id="photoGrid">
+      <!-- photo thumbnails + add button rendered by JS -->
+    </div>
+    <p class="form-hint" data-i18n="photoHint">You can add up to 5 photos</p>
+    <!-- Hidden file input -->
+    <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" multiple>
+  </div>
+
+  <!-- ──── STEP 5: Location ──── -->
+  <div class="step" id="step5">
+
+    <button class="btn btn-outline" id="getLocBtn" onclick="captureLocation()" style="margin-bottom:14px">
+      <span id="getLocBtnText" data-i18n="getLocationBtn">📍 Get My Location</span>
+    </button>
+
+    <div class="location-box" id="locationBox" style="display:none">
+      <div class="flex items-center gap-2" style="margin-bottom:6px">
+        <span style="font-size:1.5rem">📍</span>
+        <strong id="locationStatus" data-i18n="locationFound">Location captured</strong>
+      </div>
+      <div class="location-address show" id="locationAddress"></div>
+      <div class="location-coords show" id="locationCoords" style="margin-top:6px;font-size:0.75rem;color:var(--text-mid)"></div>
+    </div>
+
+    <p class="form-hint" style="margin-top:12px">📡 GPS accuracy depends on your phone settings</p>
+  </div>
+
+  <!-- ──── STEP 6: Review & Submit ──── -->
+  <div class="step" id="step6">
+    <div id="reviewContent">
+      <!-- Rendered dynamically -->
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="nav-bar" id="navBar">
+    <button class="btn btn-outline" id="backBtn" onclick="prevStep()" style="flex:1;display:none">
+      <span data-i18n="back">← Back</span>
+    </button>
+    <button class="btn btn-primary" id="nextBtn" onclick="nextStep()" style="flex:2">
+      <span data-i18n="next">Next →</span>
+    </button>
+  </div>
+</div>
+
+<!-- ══════════ SUCCESS SCREEN ══════════ -->
+<div class="success-screen" id="successScreen">
+  <div class="success-icon">✅</div>
+  <h2 class="success-title" data-i18n="successTitle">Submitted Successfully!</h2>
+  <p  class="success-msg"   data-i18n="successMsg">Your assessment has been saved.</p>
+  <div style="display:flex;flex-direction:column;gap:12px;width:100%;max-width:320px">
+    <a href="form.html" class="btn btn-primary btn-lg" data-i18n="newAssessmentAfter">New Assessment</a>
+    <a href="my-reports.html" class="btn btn-outline" data-i18n="viewReports">View My Reports</a>
+    <a href="index.html" class="btn btn-ghost btn-sm">← Home</a>
+  </div>
+</div>
+
+<!-- ══════════ ADD CUSTOM CATEGORY MODAL ══════════ -->
+<div class="modal-bg" id="customCatModal">
+  <div class="modal-box">
+    <h3 style="font-size:1.25rem;font-weight:800;margin-bottom:8px" data-i18n="addCustomCat">Add New Category</h3>
+    <p style="font-size:0.875rem;color:var(--text-mid);margin-bottom:20px" data-i18n="customCatLabel">New Category Name</p>
+    <div class="form-group">
+      <input type="text" id="customCatInput" class="form-input" data-i18n-ph="customCatPh" placeholder="Type new category name" maxlength="60">
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-outline" onclick="closeCustomCatModal()" style="flex:1" data-i18n="cancel">Cancel</button>
+      <button class="btn btn-primary" onclick="addCustomCategory()" style="flex:2">✅ <span data-i18n="next">Add →</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/app.js"></script>
+
+<script>
+/* ════════════════════════════════════════
+   FORM WIZARD STATE
+   ════════════════════════════════════════ */
+let currentStep = 1;
+const totalSteps = 6;
+let selectedCats = {}; // { id: { id, icon, label, severity:1-5, notes:'', isCustom:false } }
+let photos = [];       // array of base64 data URLs
+let locationData = null;
+let isSubmitting = false;
+let activeVoiceId = null;
+let recognition = null;
+
+// Load custom categories from localStorage
+let customCats = JSON.parse(localStorage.getItem('trust_custom_cats') || '[]');
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Require login
+  const user = getUser();
+  if (!user) { window.location.href = 'index.html'; return; }
+
+  // Set default date to today
+  document.getElementById('visitDate').value = new Date().toISOString().split('T')[0];
+
+  applyTranslations();
+  renderCategoryGrid();
+  renderPhotoGrid();
+  updateWizardUI();
+});
+
+/* ─── Wizard Navigation ──────────────────────────────────── */
+function updateWizardUI() {
+  const titles = ['step1Title','step2Title','step3Title','step4Title','step5Title','step6Title'];
+  document.getElementById('wizardTitle').textContent = t(titles[currentStep - 1]);
+  document.getElementById('wizardCount').textContent = `${currentStep} / ${totalSteps}`;
+  document.getElementById('progressFill').style.width = `${(currentStep / totalSteps) * 100}%`;
+
+  document.getElementById('backBtn').style.display = currentStep > 1 ? 'flex' : 'none';
+  const nextBtn = document.getElementById('nextBtn');
+  if (currentStep === totalSteps) {
+    nextBtn.innerHTML = `<span data-i18n="submitBtn">${t('submitBtn')}</span>`;
+    nextBtn.style.flex = '3';
+  } else {
+    nextBtn.innerHTML = `<span data-i18n="next">${t('next')}</span>`;
+    nextBtn.style.flex = '2';
+  }
+  // Show/hide steps
+  for (let i = 1; i <= totalSteps; i++) {
+    const el = document.getElementById('step' + i);
+    el.classList.toggle('active', i === currentStep);
+  }
+  // Scroll to top
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function nextStep() {
+  if (!validateStep(currentStep)) return;
+  if (currentStep === 2) renderCatDetails();
+  if (currentStep === 5) renderReview();
+  if (currentStep === totalSteps) { submitForm(); return; }
+  currentStep++;
+  updateWizardUI();
+}
+
+function prevStep() {
+  if (currentStep > 1) { currentStep--; updateWizardUI(); }
+  else { if (confirm('Leave this form?')) window.location.href = 'index.html'; }
+}
+
+/* ─── Step Validation ────────────────────────────────────── */
+function validateStep(step) {
+  if (step === 1) {
+    if (!document.getElementById('personName').value.trim()) {
+      showToast(t('required') + ': ' + t('patientName'), 'error');
+      document.getElementById('personName').focus();
+      return false;
+    }
+    if (!document.getElementById('visitDate').value) {
+      showToast(t('required') + ': ' + t('dateLabel'), 'error');
+      return false;
+    }
+  }
+  if (step === 2) {
+    if (Object.keys(selectedCats).length === 0) {
+      showToast('Please select at least one issue category.', 'warning');
+      return false;
+    }
+  }
+  return true;
+}
+
+/* ─── Step 2: Category Grid ──────────────────────────────── */
+function renderCategoryGrid() {
+  const grid = document.getElementById('catGrid');
+  const allCats = [...CATEGORIES, ...customCats];
+  grid.innerHTML = '';
+  allCats.forEach(cat => {
+    const label = getCatLabel(cat);
+    const isSelected = !!selectedCats[cat.id];
+    const card = document.createElement('div');
+    card.className = `cat-card ${isSelected ? 'selected' : ''}`;
+    card.dataset.id = cat.id;
+    if (isSelected) card.style.borderColor = cat.color;
+    card.innerHTML = `
+      <div class="cat-icon">${cat.icon}</div>
+      <div class="cat-label">${label}</div>
+      <div class="cat-check">✓</div>`;
+    card.addEventListener('click', () => toggleCategory(cat, card));
+    grid.appendChild(card);
+  });
+  // Add custom button
+  const addBtn = document.createElement('div');
+  addBtn.className = 'cat-card cat-add-card';
+  addBtn.innerHTML = `
+    <div class="cat-icon">➕</div>
+    <div class="cat-label" style="color:var(--primary)">${t('addCustomCat')}</div>`;
+  addBtn.addEventListener('click', openCustomCatModal);
+  grid.appendChild(addBtn);
+}
+
+function toggleCategory(cat, card) {
+  if (selectedCats[cat.id]) {
+    delete selectedCats[cat.id];
+    card.classList.remove('selected');
+    card.style.borderColor = '';
+  } else {
+    selectedCats[cat.id] = { ...cat, label: getCatLabel(cat), severity: 3, notes: '' };
+    card.classList.add('selected');
+    card.style.borderColor = cat.color;
+  }
+}
+
+/* ─── Custom Category Modal ──────────────────────────────── */
+function openCustomCatModal() {
+  document.getElementById('customCatModal').classList.add('show');
+  setTimeout(() => document.getElementById('customCatInput').focus(), 300);
+}
+function closeCustomCatModal() {
+  document.getElementById('customCatModal').classList.remove('show');
+  document.getElementById('customCatInput').value = '';
+}
+function addCustomCategory() {
+  const name = document.getElementById('customCatInput').value.trim();
+  if (!name) { showToast(t('required'), 'error'); return; }
+  const icons = ['📌','🔖','📎','🗒️','🔔','💡','🌟','📊'];
+  const newCat = {
+    id: 'custom_' + Date.now(),
+    icon: icons[Math.floor(Math.random() * icons.length)],
+    color: '#607D8B',
+    en: name, ml: name, isCustom: true
+  };
+  customCats.push(newCat);
+  localStorage.setItem('trust_custom_cats', JSON.stringify(customCats));
+  closeCustomCatModal();
+  renderCategoryGrid();
+  // Auto-select it
+  setTimeout(() => {
+    const card = document.querySelector(`[data-id="${newCat.id}"]`);
+    if (card) { toggleCategory(newCat, card); card.classList.add('selected'); }
+  }, 50);
+  showToast('Category "' + name + '" added!', 'success');
+}
+
+/* ─── Step 3: Category Details ───────────────────────────── */
+function renderCatDetails() {
+  const container = document.getElementById('catDetails');
+  container.innerHTML = '';
+  // Update labels for current language
+  Object.keys(selectedCats).forEach(id => {
+    const all = [...CATEGORIES, ...customCats];
+    const catDef = all.find(c => c.id === id);
+    if (catDef) selectedCats[id].label = getCatLabel(catDef);
+  });
+
+  Object.values(selectedCats).forEach(cat => {
+    const section = document.createElement('div');
+    section.className = 'cat-detail';
+    section.innerHTML = `
+      <div class="cat-detail-header" style="background:${cat.color}18;border-color:${cat.color}33">
+        <span class="cat-detail-icon">${cat.icon}</span>
+        <span class="cat-detail-title" style="color:${cat.color}">${cat.label}</span>
+      </div>
+      <div class="cat-detail-body">
+        <div class="form-group">
+          <label class="form-label" data-i18n="severityLabel">${t('severityLabel')}</label>
+          <div class="severity-row" id="sev_${cat.id}">
+            ${[1,2,3,4,5].map(l => `
+              <button type="button" class="sev-btn ${cat.severity === l ? 'active' : ''}"
+                data-level="${l}" onclick="setSeverity('${cat.id}',${l},this)">
+                ${t('sev'+l)}
+              </button>`).join('')}
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:10px">
+          <label class="form-label" data-i18n="notesLabel">${t('notesLabel')}</label>
+          <textarea class="form-textarea" id="notes_${cat.id}"
+            data-i18n-ph="notesPh"
+            placeholder="${t('notesPh')}"
+            oninput="updateNotes('${cat.id}',this.value)">${cat.notes}</textarea>
+        </div>
+        <button type="button" class="voice-btn" id="voiceBtn_${cat.id}"
+          onclick="toggleVoice('${cat.id}')">
+          <span data-i18n="recordVoice">${t('recordVoice')}</span>
+        </button>
+        <div class="voice-indicator" id="voiceInd_${cat.id}">
+          <div class="voice-waves">
+            <div class="voice-bar"></div><div class="voice-bar"></div>
+            <div class="voice-bar"></div><div class="voice-bar"></div>
+            <div class="voice-bar"></div>
+          </div>
+          <span id="voiceIndText_${cat.id}" data-i18n="listening">${t('listening')}</span>
+        </div>
+        <p class="form-hint" data-i18n="voiceHint">${t('voiceHint')}</p>
+      </div>`;
+    container.appendChild(section);
+  });
+}
+
+function setSeverity(catId, level, btn) {
+  selectedCats[catId].severity = level;
+  btn.closest('.severity-row').querySelectorAll('.sev-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function updateNotes(catId, val) {
+  if (selectedCats[catId]) selectedCats[catId].notes = val;
+}
+
+/* ─── Voice Recording (Web Speech API) ──────────────────── */
+function toggleVoice(catId) {
+  if (activeVoiceId === catId) {
+    stopVoice(); return;
+  }
+  if (activeVoiceId) stopVoice();
+  startVoice(catId);
+}
+
+function startVoice(catId) {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    showToast('Voice recording not supported in this browser. Use Chrome.', 'warning');
+    return;
+  }
+  recognition = new SR();
+  recognition.lang = currentLang === 'ml' ? 'ml-IN' : 'en-IN';
+  recognition.continuous = true;
+  recognition.interimResults = true;
+
+  const textarea = document.getElementById('notes_' + catId);
+  const voiceBtn = document.getElementById('voiceBtn_' + catId);
+  const voiceInd = document.getElementById('voiceInd_' + catId);
+  let finalTranscript = textarea.value;
+
+  recognition.onstart = () => {
+    activeVoiceId = catId;
+    voiceBtn.classList.add('recording');
+    voiceBtn.innerHTML = `⏹ <span>${t('stopRecording')}</span>`;
+    voiceInd.classList.add('show');
+  };
+
+  recognition.onresult = (e) => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) {
+        finalTranscript += e.results[i][0].transcript + ' ';
+      } else {
+        interim += e.results[i][0].transcript;
+      }
+    }
+    textarea.value = finalTranscript + interim;
+    selectedCats[catId].notes = finalTranscript + interim;
+  };
+
+  recognition.onerror = (e) => {
+    showToast('Microphone error: ' + e.error, 'error');
+    stopVoice();
+  };
+
+  recognition.onend = () => {
+    if (activeVoiceId === catId) stopVoice();
+  };
+
+  recognition.start();
+}
+
+function stopVoice() {
+  if (!activeVoiceId) return;
+  const catId = activeVoiceId;
+  if (recognition) { try { recognition.stop(); } catch {} recognition = null; }
+
+  const voiceBtn = document.getElementById('voiceBtn_' + catId);
+  const voiceInd = document.getElementById('voiceInd_' + catId);
+  if (voiceBtn) {
+    voiceBtn.classList.remove('recording');
+    voiceBtn.innerHTML = `<span>${t('recordVoice')}</span>`;
+  }
+  if (voiceInd) voiceInd.classList.remove('show');
+  activeVoiceId = null;
+}
+
+/* ─── Step 4: Photos ─────────────────────────────────────── */
+function renderPhotoGrid() {
+  const grid = document.getElementById('photoGrid');
+  grid.innerHTML = '';
+  photos.forEach((src, i) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'photo-thumb';
+    thumb.innerHTML = `
+      <img src="${src}" alt="Photo ${i+1}" loading="lazy">
+      <button class="photo-remove" onclick="removePhoto(${i})">✕</button>`;
+    grid.appendChild(thumb);
+  });
+  if (photos.length < 5) {
+    const addBtn = document.createElement('div');
+    addBtn.className = 'photo-add';
+    addBtn.innerHTML = `<span class="photo-add-icon">📷</span><span>${t('addPhotoBtn')}</span>`;
+    addBtn.onclick = () => document.getElementById('photoInput').click();
+    grid.appendChild(addBtn);
+  }
+}
+
+document.getElementById('photoInput').addEventListener('change', async (e) => {
+  const files = Array.from(e.target.files || []);
+  showLoading(t('saving'));
+  for (const file of files) {
+    if (photos.length >= 5) break;
+    try {
+      const compressed = await compressImage(file, 1200, 1200, 0.75);
+      photos.push(compressed);
+    } catch { showToast('Could not process photo', 'error'); }
+  }
+  hideLoading();
+  renderPhotoGrid();
+  e.target.value = '';
+});
+
+function removePhoto(idx) {
+  photos.splice(idx, 1);
+  renderPhotoGrid();
+}
+
+/* ─── Step 5: Location ───────────────────────────────────── */
+async function captureLocation() {
+  const btn = document.getElementById('getLocBtn');
+  btn.disabled = true;
+  btn.innerHTML = `<span>${t('gettingLocation')}</span>`;
+  try {
+    locationData = await getCurrentLocation();
+    document.getElementById('locationBox').style.display = 'block';
+    document.getElementById('locationAddress').textContent = locationData.address;
+    document.getElementById('locationCoords').textContent =
+      `Coords: ${locationData.lat.toFixed(6)}, ${locationData.lng.toFixed(6)} (±${Math.round(locationData.accuracy)}m)`;
+    btn.innerHTML = `<span>${t('locationFound')}</span>`;
+    btn.style.borderColor = 'var(--success)';
+    btn.style.color = 'var(--success)';
+    showToast(t('locationFound'), 'success');
+  } catch (e) {
+    btn.innerHTML = `<span data-i18n="getLocationBtn">${t('getLocationBtn')}</span>`;
+    btn.disabled = false;
+    showToast(t('locationError'), 'error');
+  }
+}
+
+/* ─── Step 6: Review ─────────────────────────────────────── */
+function renderReview() {
+  const p = document.getElementById('personName').value.trim();
+  const age = document.getElementById('personAge').value;
+  const addr = document.getElementById('personAddress').value.trim();
+  const village = document.getElementById('personVillage').value.trim();
+  const date = document.getElementById('visitDate').value;
+  const cats = Object.values(selectedCats);
+
+  let html = `
+    <div class="review-section">
+      <div class="review-section-title">👤 ${t('reviewBasicInfo')}</div>
+      <div class="review-row"><span class="review-label">${t('name')}</span><span class="review-value">${p || t('na')}</span></div>
+      <div class="review-row"><span class="review-label">${t('age')}</span><span class="review-value">${age ? age+' '+t('years') : t('na')}</span></div>
+      <div class="review-row"><span class="review-label">${t('address')}</span><span class="review-value">${addr || t('na')}</span></div>
+      <div class="review-row"><span class="review-label">${t('village')}</span><span class="review-value">${village || t('na')}</span></div>
+      <div class="review-row"><span class="review-label">${t('date')}</span><span class="review-value">${formatDate(date)}</span></div>
+    </div>`;
+
+  html += `<div class="review-section"><div class="review-section-title">📋 ${t('reviewCategories')} (${cats.length})</div>`;
+  cats.forEach(c => {
+    html += `<div class="review-row" style="flex-direction:column;gap:4px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span>${c.icon}</span><strong>${c.label}</strong>
+        <span style="margin-left:auto;font-size:0.75rem;font-weight:700;padding:2px 8px;border-radius:999px;background:${sevColor(c.severity)}22;color:${sevColor(c.severity)}">${sevLabel(c.severity)}</span>
+      </div>
+      ${c.notes ? `<div style="font-size:0.875rem;color:var(--text-mid);padding-left:28px">${c.notes}</div>` : ''}
+    </div>`;
+  });
+  html += `</div>`;
+
+  html += `<div class="review-section">
+    <div class="review-section-title">📷 ${t('reviewPhotos')}</div>
+    <div class="review-row">
+      <span class="review-label">${t('photos')}</span>
+      <span class="review-value">${photos.length} ${t('photosCount')}</span>
+    </div>`;
+  if (photos.length) {
+    html += `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:10px 16px">`;
+    photos.forEach(src => { html += `<img src="${src}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px" loading="lazy">`; });
+    html += `</div>`;
+  }
+  html += `</div>`;
+
+  html += `<div class="review-section">
+    <div class="review-section-title">📍 ${t('reviewLocation')}</div>
+    <div class="review-row">
+      <span class="review-label">${t('location')}</span>
+      <span class="review-value" style="font-size:0.875rem">${locationData ? `<a href="https://maps.google.com/?q=${locationData.lat},${locationData.lng}" target="_blank" style="color:var(--primary);text-decoration:underline;">${locationData.address}</a>` : t('noLocation')}</span>
+    </div>
+  </div>`;
+
+  document.getElementById('reviewContent').innerHTML = html;
+}
+
+/* ─── Submit ─────────────────────────────────────────────── */
+async function submitForm() {
+  if (isSubmitting) return;
+  if (!confirm(t('confirmSubmit'))) return;
+  isSubmitting = true;
+  showLoading(t('submitting'));
+
+  const user = getUser();
+  const cats = Object.values(selectedCats);
+
+  // Upload photos
+  let photoUrls = [];
+  for (let i = 0; i < photos.length; i++) {
+    try {
+      const url = await uploadPhoto(photos[i], `photo_${i}.jpg`);
+      photoUrls.push(url);
+    } catch { photoUrls.push(photos[i]); }
+  }
+
+  const assessment = {
+    staffName:    user.name,
+    staffPhone:   user.phone,
+    personName:   document.getElementById('personName').value.trim(),
+    age:          document.getElementById('personAge').value || '',
+    address:      document.getElementById('personAddress').value.trim(),
+    village:      document.getElementById('personVillage').value.trim(),
+    visitDate:    document.getElementById('visitDate').value,
+    submittedAt:  new Date().toISOString(),
+    localDate:    new Date().toISOString(),
+    categories:   cats.map(c => ({
+      id: c.id, icon: c.icon, label: c.label,
+      severity: c.severity, notes: c.notes, isCustom: c.isCustom || false
+    })),
+    photos:       photoUrls,
+    locationAddress: locationData?.address || '',
+    locationLat:  locationData?.lat || null,
+    locationLng:  locationData?.lng || null,
+  };
+
+  try {
+    await fbSaveAssessment(assessment);
+    // Also save locally
+    const local = JSON.parse(localStorage.getItem('trust_my_reports') || '[]');
+    local.unshift({ ...assessment, id: 'local_' + Date.now() });
+    localStorage.setItem('trust_my_reports', JSON.stringify(local.slice(0, 100)));
+    // Also save to all_reports for admin demo
+    const all = JSON.parse(localStorage.getItem('trust_all_reports') || '[]');
+    all.unshift({ ...assessment, id: 'local_' + Date.now() });
+    localStorage.setItem('trust_all_reports', JSON.stringify(all.slice(0, 500)));
+  } catch (e) {
+    console.error(e);
+  }
+
+  hideLoading();
+  document.getElementById('formWrap').style.display = 'none';
+  document.getElementById('successScreen').classList.add('show');
+  applyTranslations();
+}
+
+/* ─── Language change ────────────────────────────────────── */
+function onLangChange() {
+  renderCategoryGrid();
+  updateWizardUI();
+  if (currentStep === 3) renderCatDetails();
+  if (currentStep === 6) renderReview();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="description" content="Sree Lakshmi Trust — Field Assessment Tool for field promotors">
+  <title>Sree Lakshmi Trust — Field Assessment</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="css/main.css">
+  <meta name="theme-color" content="#1B2F6B">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <style>
+    .register-hero { display: flex; flex-direction: column; min-height: 100vh; }
+    .admin-footer   { text-align:center; padding: 12px 0 24px; }
+    .admin-footer a { font-size: 0.875rem; color: var(--text-mid); text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<!-- Language Toggle -->
+<div class="lang-toggle" id="langToggle">
+  <button class="lang-btn active" data-lang="en" onclick="setLanguage('en')">EN</button>
+  <button class="lang-btn" data-lang="ml" onclick="setLanguage('ml')">മ</button>
+</div>
+
+<!-- Toast -->
+<div id="toastContainer"></div>
+
+<!-- Loading -->
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <p data-i18n="loading">Loading...</p>
+</div>
+
+<!-- ═══════════ REGISTRATION SCREEN ═══════════ -->
+<div id="registerScreen" class="register-hero" style="display:none">
+  <div class="hero" style="padding:40px 24px 48px">
+    <div style="background:white; padding:6px 12px; border-radius:10px; display:inline-block; margin-bottom:12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+      <img src="logo.png" alt="Sree Lakshmi Trust" style="height:48px;width:auto;display:block;">
+    </div>
+    <h1 style="font-size:1.5rem;font-weight:800">Sree Lakshmi Trust</h1>
+    <p data-i18n="tagline">Field Assessment Tool</p>
+  </div>
+
+  <div class="register-form-wrap">
+    <h2 data-i18n="registerTitle">Tell us who you are</h2>
+    <p class="sub" data-i18n="registerSub">You only need to do this once</p>
+
+    <form id="regForm" novalidate>
+      <div class="form-group">
+        <label class="form-label" for="regName">
+          <span data-i18n="nameLabel">Your Full Name</span>
+          <span class="required">*</span>
+        </label>
+        <input id="regName" type="text" class="form-input"
+               data-i18n-ph="namePlaceholder"
+               placeholder="Enter your full name"
+               autocomplete="name" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="regPhone">
+          <span data-i18n="phoneLabel">Phone Number</span>
+          <span class="required">*</span>
+        </label>
+        <input id="regPhone" type="tel" class="form-input"
+               data-i18n-ph="phonePlaceholder"
+               placeholder="e.g. 9876543210"
+               pattern="[0-9]{10}" maxlength="10"
+               autocomplete="tel" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg" style="margin-top:8px">
+        <span data-i18n="registerBtn">Start →</span>
+      </button>
+    </form>
+
+
+  </div>
+</div>
+
+<!-- ═══════════ HOME SCREEN ═══════════ -->
+<div id="homeScreen" style="display:none" class="app-container">
+  <div class="home-hero">
+    <div style="background:white; padding:4px 8px; border-radius:8px; display:inline-block; margin-bottom:10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+      <img src="logo.png" alt="Sree Lakshmi Trust" style="height:36px;width:auto;display:block;">
+    </div>
+    <div class="home-name" id="homeName"></div>
+    <div class="home-sub" data-i18n="homeSubtitle">Ready for today's assessment?</div>
+  </div>
+
+  <div class="home-body">
+    <a href="form.html" id="newAssessmentBtn" class="action-card">
+      <div class="action-icon green">📋</div>
+      <div class="action-text">
+        <h3 data-i18n="newAssessment">New Assessment</h3>
+        <p  data-i18n="newAssessmentSub">Record a new field visit</p>
+      </div>
+      <div class="action-arrow">›</div>
+    </a>
+
+    <a href="donation.html" class="action-card">
+      <div class="action-icon" style="background:#FFF8E1">💝</div>
+      <div class="action-text">
+        <h3>New Donation</h3>
+        <p>Record a donation</p>
+      </div>
+      <div class="action-arrow">›</div>
+    </a>
+
+    <a href="membership.html" class="action-card">
+      <div class="action-icon" style="background:#EDE7F6">🤝</div>
+      <div class="action-text">
+        <h3>New Membership</h3>
+        <p>Register a new member (₹100)</p>
+      </div>
+      <div class="action-arrow">›</div>
+    </a>
+
+    <a href="my-reports.html" class="action-card">
+      <div class="action-icon gold">📄</div>
+      <div class="action-text">
+        <h3 data-i18n="myReports">My Reports</h3>
+        <p  data-i18n="myReportsSub">View your submissions</p>
+      </div>
+      <div class="action-arrow">›</div>
+    </a>
+
+    <!-- Offline queue alert -->
+    <div id="offlineAlert" style="display:none;background:#FFF3CD;border:1px solid #FFB300;border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:0.875rem;color:#5D4037">
+      ⚠️ <strong>Offline reports pending sync.</strong> Connect to internet to sync.
+    </div>
+
+
+  </div>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+<!-- App Scripts -->
+<script src="js/i18n.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/app.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  applyTranslations();
+  const user = getUser();
+  if (user) showHome(user);
+  else showRegister();
+  checkOfflineQueue();
+});
+
+function showRegister() {
+  document.getElementById('registerScreen').style.display = 'flex';
+  document.getElementById('homeScreen').style.display = 'none';
+}
+
+function showHome(user) {
+  document.getElementById('registerScreen').style.display = 'none';
+  document.getElementById('homeScreen').style.display = 'block';
+  document.getElementById('homeName').textContent = t('homeGreeting') + ' ' + user.name + '!';
+}
+
+function checkOfflineQueue() {
+  const q = JSON.parse(localStorage.getItem('trust_queue') || '[]');
+  if (q.length > 0) {
+    document.getElementById('offlineAlert').style.display = 'block';
+    document.getElementById('offlineAlert').textContent = `⚠️ ${q.length} report(s) pending sync. Connect to internet to upload.`;
+  }
+}
+
+document.getElementById('regForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name  = document.getElementById('regName').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+  if (!name)  { showToast(t('required'), 'error'); return; }
+  if (!/^\d{10}$/.test(phone)) { showToast(t('invalidPhone'), 'error'); return; }
+
+  showLoading(t('saving'));
+  const user = { name, phone, registeredAt: new Date().toISOString() };
+  saveUser(user);
+  try { await fbSaveUser(user); } catch {}
+  hideLoading();
+  showHome(user);
+  applyTranslations();
+  document.getElementById('homeName').textContent = t('homeGreeting') + ' ' + name + '!';
+});
+
+// Language change hook
+function onLangChange(lang) {
+  const user = getUser();
+  if (user) {
+    document.getElementById('homeName').textContent = t('homeGreeting') + ' ' + user.name + '!';
+  }
+}
+</script>
+</body>
+</html>

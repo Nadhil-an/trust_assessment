@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="description" content="My Reports — Sree Lakshmi Trust Field Assessment">
+  <title>My Reports — Sree Lakshmi Trust</title>
+  <link rel="stylesheet" href="css/main.css">
+  <meta name="theme-color" content="#1B6F3F">
+  <style>
+    body { background: var(--bg); }
+    .page { max-width: 520px; margin: 0 auto; min-height: 100vh; background: var(--bg); }
+    .report-detail-cats { padding: 0 16px 16px; }
+    .detail-cat-row {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 0; border-bottom: 1px solid var(--border);
+    }
+    .detail-cat-row:last-child { border: none; }
+    .detail-cat-info { flex: 1; }
+    .detail-cat-name { font-weight: 700; font-size: 0.9375rem; margin-bottom: 3px; }
+    .detail-cat-notes { font-size: 0.875rem; color: var(--text-mid); }
+    .sev-dot {
+      width: 10px; height: 10px; border-radius: 50%; margin-top: 5px; flex-shrink: 0;
+    }
+    .photo-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; padding: 10px 16px; }
+    .photo-row img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:10px; }
+    .stats-row {
+      display: flex; background: white; border-radius: var(--r-lg);
+      overflow: hidden; margin-bottom: 16px; border: 1px solid var(--border);
+    }
+    .stat-col { flex: 1; text-align: center; padding: 14px 8px; border-right: 1px solid var(--border); }
+    .stat-col:last-child { border: none; }
+    .stat-val-sm { font-size: 1.5rem; font-weight: 800; color: var(--primary); }
+    .stat-lbl-sm { font-size: 0.75rem; color: var(--text-mid); font-weight: 600; }
+    /* Tab Bar */
+    .tab-bar { display:flex; background:white; border-bottom:2px solid var(--border); position:sticky; top:0; z-index:100; }
+    .tab-btn { flex:1; padding:12px 4px; border:none; background:transparent; font-size:0.8rem; font-weight:700; color:var(--text-mid); cursor:pointer; border-bottom:3px solid transparent; margin-bottom:-2px; transition:all 0.2s; }
+    .tab-btn.active { color:var(--primary); border-bottom-color:var(--primary); }
+    /* Finance Summary Card */
+    .finance-card { background:white; border-radius:var(--r-lg); border:1px solid var(--border); padding:14px 16px; margin-bottom:14px; }
+    .finance-card-title { font-size:var(--text-xs); font-weight:800; color:var(--text-mid); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:10px; }
+    .finance-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+    .finance-label { font-size:var(--text-sm); color:var(--text); }
+    .finance-val { font-size:var(--text-base); font-weight:800; color:var(--primary); }
+    .finance-sub { font-size:0.72rem; color:var(--text-mid); margin-top:2px; }
+    /* Record Cards */
+    .mem-card, .don-card {
+      background:white; border:1px solid var(--border); border-radius:var(--r-lg);
+      padding:14px 16px; margin-bottom:10px; box-shadow:var(--shadow-sm);
+    }
+    .record-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
+    .record-name { font-size:var(--text-base); font-weight:800; }
+    .record-amount { font-size:var(--text-base); font-weight:800; color:var(--primary); }
+    .record-meta { display:flex; flex-wrap:wrap; gap:6px; }
+    .record-chip { padding:3px 10px; border-radius:999px; font-size:0.72rem; font-weight:700; }
+    .chip-gpay { background:#E3F2FD; color:#1565C0; }
+    .chip-cash { background:#E8F5E9; color:#1B5E20; }
+    .chip-paid { background:#E8F5E9; color:#1B5E20; }
+    .chip-pending { background:#FFF8E1; color:#7f5004; }
+    .chip-low { background:#E8F5E9; color:#1B5E20; }
+    .chip-medium { background:#FFF3E0; color:#E65100; }
+    .chip-high { background:#FDECEA; color:#B71C1C; }
+  </style>
+</head>
+<body>
+
+<div class="lang-toggle">
+  <button class="lang-btn active" data-lang="en" onclick="setLanguage('en')">EN</button>
+  <button class="lang-btn" data-lang="ml" onclick="setLanguage('ml')">മ</button>
+</div>
+
+<div id="toastContainer"></div>
+<div id="loadingOverlay"><div class="spinner"></div><p>Loading...</p></div>
+
+<div class="page">
+  <!-- Logo Header -->
+  <div style="background:var(--primary-dark);padding:10px 16px;display:flex;align-items:center;gap:10px">
+    <a href="index.html" style="color:rgba(255,255,255,0.7);font-size:1.3rem;line-height:1;text-decoration:none">←</a>
+    <div style="background:white; padding:4px 8px; border-radius:6px; display:inline-flex; align-items:center; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+      <img src="logo.png" alt="Sree Lakshmi Trust" style="height:26px;width:auto;display:block;">
+    </div>
+    <span style="color:white;font-weight:700;font-size:0.9375rem;">Sree Lakshmi Trust</span>
+  </div>
+
+  <!-- Header -->
+  <div class="page-header">
+    <button class="back-btn" onclick="window.location.href='index.html'">←</button>
+    <h1 class="page-title" data-i18n="myReportsTitle">My Reports</h1>
+  </div>
+
+  <!-- Tab Bar -->
+  <div class="tab-bar" id="tabBar">
+    <button class="tab-btn active" onclick="switchTab('assessments', this)">📋 Assessments</button>
+    <button class="tab-btn" onclick="switchTab('memberships', this)">🤝 Memberships</button>
+    <button class="tab-btn" onclick="switchTab('donations', this)">💝 Donations</button>
+  </div>
+
+  <!-- Date Filter -->
+  <div style="padding:14px 16px 0; display:flex; align-items:center; justify-content:space-between; gap:10px">
+    <div style="font-size:0.875rem; font-weight:700; color:var(--text-mid);">Filter by Date:</div>
+    <div style="display:flex; gap:8px">
+      <input type="date" id="reportDateFilter" class="form-input" style="width:auto; padding:6px 12px; min-height:unset; font-size:0.875rem" onchange="renderCurrentTab()">
+      <button class="btn btn-outline" style="padding:6px 10px; min-height:unset; font-size:0.875rem" onclick="clearDateFilter()">Clear</button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div id="statsRow" style="padding:14px 16px 0"></div>
+
+  <!-- Reports List -->
+  <div style="padding:0 16px 80px" id="reportsList">
+    <div class="empty-state" id="emptyState" style="display:none">
+      <div class="empty-icon">📋</div>
+      <h3>No records yet</h3>
+      <p style="margin-bottom:20px">Nothing submitted in this category yet.</p>
+    </div>
+    <div id="cardsContainer"></div>
+  </div>
+</div>
+
+<!-- Report Detail Modal -->
+<div class="modal-bg" id="detailModal">
+  <div class="modal-box" style="max-height:85vh;overflow-y:auto;padding:0">
+    <div class="page-header" style="position:sticky;top:0;background:white;z-index:10">
+      <button class="back-btn" onclick="closeDetail()">✕</button>
+      <h2 class="page-title" id="detailTitle">Report Detail</h2>
+    </div>
+    <div id="detailContent" style="padding:0 0 40px"></div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/app.js"></script>
+
+<script>
+let allReports = [];
+let allMemberships = [];
+let allDonations = [];
+let currentTab = 'assessments';
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const user = requireUser();
+  if (!user) return;
+  applyTranslations();
+  showLoading();
+  [allReports, allMemberships, allDonations] = await Promise.all([
+    fbGetMyAssessments(user.phone),
+    fbGetMyMemberships(user.phone),
+    fbGetMyDonations(user.phone),
+  ]);
+  
+  document.getElementById('reportDateFilter').value = new Date().toISOString().split('T')[0];
+
+  hideLoading();
+  renderCurrentTab();
+});
+
+function switchTab(tab, btn) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCurrentTab();
+}
+
+function clearDateFilter() {
+  document.getElementById('reportDateFilter').value = '';
+  renderCurrentTab();
+}
+
+function getFilteredData(dataArray) {
+  const dateStr = document.getElementById('reportDateFilter').value;
+  if (!dateStr) return dataArray;
+  return dataArray.filter(r => r.dateStr === dateStr || (r.submittedAt && r.submittedAt.startsWith(dateStr)) || (r.localDate && r.localDate.startsWith(dateStr)));
+}
+
+function renderCurrentTab() {
+  if (currentTab === 'assessments') renderReports();
+  else if (currentTab === 'memberships') renderMemberships();
+  else renderDonations();
+}
+
+/* ── Assessments ─────────────────────────────────── */
+function renderReports() {
+  const container = document.getElementById('cardsContainer');
+  const empty = document.getElementById('emptyState');
+  const statsRow = document.getElementById('statsRow');
+
+  const filteredReports = getFilteredData(allReports);
+  const isFiltered = !!document.getElementById('reportDateFilter').value;
+
+  if (!filteredReports.length) {
+    empty.style.display = 'block'; container.innerHTML = ''; statsRow.innerHTML = '';
+    return;
+  }
+  empty.style.display = 'none';
+
+  if (isFiltered) {
+    statsRow.innerHTML = `
+      <div class="stats-row">
+        <div class="stat-col">
+          <div class="stat-val-sm">${filteredReports.length}</div>
+          <div class="stat-lbl-sm">Assessments on Date</div>
+        </div>
+      </div>`;
+  } else {
+    const today = allReports.filter(r => isToday(r.submittedAt || r.localDate)).length;
+    const week  = allReports.filter(r => isThisWeek(r.submittedAt || r.localDate)).length;
+    statsRow.innerHTML = `
+      <div class="stats-row">
+        <div class="stat-col">
+          <div class="stat-val-sm">${allReports.length}</div>
+          <div class="stat-lbl-sm">Total</div>
+        </div>
+        <div class="stat-col">
+          <div class="stat-val-sm">${today}</div>
+          <div class="stat-lbl-sm">Today</div>
+        </div>
+        <div class="stat-col">
+          <div class="stat-val-sm">${week}</div>
+          <div class="stat-lbl-sm">This Week</div>
+        </div>
+      </div>`;
+  }
+
+  container.innerHTML = '';
+  filteredReports.forEach((r, idx) => {
+    const card = document.createElement('div');
+    card.className = 'report-card';
+    const dt = r.submittedAt || r.localDate || '';
+    const cats = (r.categories || []).slice(0,4);
+    const more = (r.categories || []).length - 4;
+    let chips = cats.map(c => `<span class="chip">${c.icon} ${c.label}</span>`).join('');
+    if (more > 0) chips += `<span class="chip">+${more} more</span>`;
+    card.innerHTML = `
+      <div class="report-header">
+        <div>
+          <div class="report-name">${r.personName || t('na')}</div>
+          <div class="report-date">📅 ${formatDate(r.visitDate || dt)}</div>
+          ${r.village ? `<div style="font-size:0.8rem;color:var(--text-mid)">📍 ${r.village}</div>` : ''}
+        </div>
+        <div style="font-size:0.8rem;color:var(--text-mid);flex-shrink:0">${dt ? new Date(dt).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}) : ''}</div>
+      </div>
+      <div class="report-body">
+        <div class="chip-row">${chips}</div>
+        ${r.photos && r.photos.length ? `<div style="font-size:0.8rem;color:var(--text-mid);margin-top:6px">📷 ${r.photos.length} photo(s)</div>` : ''}
+        ${r.locationAddress ? `<div style="font-size:0.75rem;color:var(--text-mid);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📍 ${r.locationAddress}</div>` : ''}
+      </div>`;
+    // Find original index for modal
+    const originalIdx = allReports.indexOf(r);
+    card.addEventListener('click', () => openDetail(originalIdx));
+    container.appendChild(card);
+  });
+}
+
+/* ── Memberships ─────────────────────────────────── */
+function renderMemberships() {
+  const container = document.getElementById('cardsContainer');
+  const empty = document.getElementById('emptyState');
+  const statsRow = document.getElementById('statsRow');
+
+  const filteredMemberships = getFilteredData(allMemberships);
+
+  if (!filteredMemberships.length) {
+    empty.style.display = 'block'; container.innerHTML = ''; statsRow.innerHTML = '';
+    return;
+  }
+  empty.style.display = 'none';
+
+  const paid = filteredMemberships.filter(m => m.paymentStatus === 'paid');
+  const gpay = paid.filter(m => m.paymentMethod === 'gpay');
+  const cash = paid.filter(m => m.paymentMethod === 'cash');
+  const totalAmt = paid.length * 100;
+  const gpayAmt = gpay.length * 100;
+  const cashAmt = cash.length * 100;
+
+  statsRow.innerHTML = `
+    <div class="finance-card">
+      <div class="finance-card-title">🤝 My Membership Collection</div>
+      <div class="finance-row">
+        <span class="finance-label">Total Collected</span>
+        <span class="finance-val">₹${totalAmt.toLocaleString('en-IN')}</span>
+      </div>
+      <div class="finance-sub"><img src="gpay.png" alt="GPay" style="height:12px;vertical-align:middle;margin-right:2px"> GPay: ₹${gpayAmt.toLocaleString('en-IN')} &nbsp;&nbsp; 💵 Cash: ₹${cashAmt.toLocaleString('en-IN')}</div>
+      <div class="finance-sub" style="margin-top:4px">Total: ${filteredMemberships.length} | Paid: ${paid.length} | Pending: ${filteredMemberships.length - paid.length}</div>
+    </div>`;
+
+  container.innerHTML = '';
+  filteredMemberships.forEach(m => {
+    const card = document.createElement('div');
+    card.className = 'mem-card';
+    card.innerHTML = `
+      <div class="record-header">
+        <div>
+          <div class="record-name">🤝 ${m.memberName}</div>
+          <div style="font-size:0.8rem;color:var(--text-mid);margin-top:2px">${m.memberPhone} ${m.place ? '· '+m.place : ''}</div>
+        </div>
+        <div class="record-amount">${m.paymentStatus === 'paid' ? '₹100' : '<span style="color:#F9A825">Pending</span>'}</div>
+      </div>
+      <div class="record-meta">
+        <span class="record-chip chip-${m.paymentMethod}">${m.paymentMethod === 'gpay' ? '<img src="gpay.png" alt="GPay" style="height:10px;vertical-align:middle;margin-right:2px"> GPay' : '💵 Cash'}</span>
+        <span class="record-chip chip-${m.paymentStatus}">${m.paymentStatus === 'paid' ? '✅ Paid' : '⏳ Pending'}</span>
+        <span class="record-chip chip-${m.interestLevel}">⭐ ${m.interestLevel?.charAt(0).toUpperCase() + m.interestLevel?.slice(1)} Interest</span>
+        <span style="margin-left:auto;font-size:0.72rem;color:var(--text-mid)">${formatDate(m.submittedAt)}</span>
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+/* ── Donations ─────────────────────────────────── */
+function renderDonations() {
+  const container = document.getElementById('cardsContainer');
+  const empty = document.getElementById('emptyState');
+  const statsRow = document.getElementById('statsRow');
+
+  const filteredDonations = getFilteredData(allDonations);
+
+  if (!filteredDonations.length) {
+    empty.style.display = 'block'; container.innerHTML = ''; statsRow.innerHTML = '';
+    return;
+  }
+  empty.style.display = 'none';
+
+  const gpay = filteredDonations.filter(d => d.paymentMethod === 'gpay');
+  const cash = filteredDonations.filter(d => d.paymentMethod === 'cash');
+  const totalAmt = filteredDonations.reduce((s, d) => s + (d.amount || 0), 0);
+  const gpayAmt  = gpay.reduce((s, d) => s + (d.amount || 0), 0);
+  const cashAmt  = cash.reduce((s, d) => s + (d.amount || 0), 0);
+
+  statsRow.innerHTML = `
+    <div class="finance-card">
+      <div class="finance-card-title">💝 My Donation Collection</div>
+      <div class="finance-row">
+        <span class="finance-label">Total Collected</span>
+        <span class="finance-val">₹${totalAmt.toLocaleString('en-IN')}</span>
+      </div>
+      <div class="finance-sub"><img src="gpay.png" alt="GPay" style="height:12px;vertical-align:middle;margin-right:2px"> GPay: ₹${gpayAmt.toLocaleString('en-IN')} &nbsp;&nbsp; 💵 Cash: ₹${cashAmt.toLocaleString('en-IN')}</div>
+      <div class="finance-sub" style="margin-top:4px">Total records: ${filteredDonations.length}</div>
+    </div>`;
+
+  container.innerHTML = '';
+  filteredDonations.forEach(d => {
+    const card = document.createElement('div');
+    card.className = 'don-card';
+    card.innerHTML = `
+      <div class="record-header">
+        <div>
+          <div class="record-name">💝 ${d.donorName}</div>
+          <div style="font-size:0.8rem;color:var(--text-mid);margin-top:2px">${d.donorPhone} ${d.place ? '· '+d.place : ''}</div>
+        </div>
+        <div class="record-amount">₹${(d.amount||0).toLocaleString('en-IN')}</div>
+      </div>
+      <div class="record-meta">
+        <span class="record-chip chip-${d.paymentMethod}">${d.paymentMethod === 'gpay' ? '<img src="gpay.png" alt="GPay" style="height:10px;vertical-align:middle;margin-right:2px"> GPay' : '💵 Cash'}</span>
+        <span class="record-chip chip-${d.interestLevel}">⭐ ${d.interestLevel?.charAt(0).toUpperCase() + d.interestLevel?.slice(1)} Interest</span>
+        <span style="margin-left:auto;font-size:0.72rem;color:var(--text-mid)">${formatDate(d.submittedAt)}</span>
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+/* ── Assessment Detail Modal ──────────────────── */
+function openDetail(idx) {
+  const r = allReports[idx];
+  document.getElementById('detailTitle').textContent = r.personName || t('na');
+  const modal = document.getElementById('detailModal');
+  const content = document.getElementById('detailContent');
+  const dt = r.submittedAt || r.localDate || '';
+
+  let html = `
+    <div style="padding:16px;border-bottom:1px solid var(--border);background:var(--primary-bg)">
+      <div style="font-size:0.8125rem;color:var(--primary);font-weight:700;margin-bottom:4px">${formatDateTime(dt)}</div>
+      <div style="font-size:0.875rem;color:var(--text-mid)">${r.village || ''} ${r.village && r.address ? '·' : ''} ${r.address || ''}</div>
+    </div>
+    <div style="padding:14px 16px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        ${r.age ? `<span style="font-size:0.875rem"><strong>${t('age')}:</strong> ${r.age} ${t('years')}</span>` : ''}
+        ${r.visitDate ? `<span style="font-size:0.875rem"><strong>${t('date')}:</strong> ${formatDate(r.visitDate)}</span>` : ''}
+      </div>
+    </div>`;
+
+  if (r.categories && r.categories.length) {
+    html += `<div style="padding:12px 16px 4px;font-weight:800;font-size:0.875rem;color:var(--text-mid);text-transform:uppercase;letter-spacing:.05em">${t('categories')}</div>`;
+    html += `<div class="report-detail-cats">`;
+    r.categories.forEach(c => {
+      html += `<div class="detail-cat-row">
+        <span style="font-size:1.5rem">${c.icon}</span>
+        <div class="detail-cat-info">
+          <div class="detail-cat-name">${c.label}</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
+            <div class="sev-dot" style="background:${sevColor(c.severity)}"></div>
+            <span style="font-size:0.75rem;font-weight:700;color:${sevColor(c.severity)}">${sevLabel(c.severity)}</span>
+          </div>
+          ${c.notes ? `<div class="detail-cat-notes" style="margin-top:6px">${c.notes}</div>` : ''}
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  if (r.photos && r.photos.length) {
+    html += `<div style="padding:12px 16px 4px;font-weight:800;font-size:0.875rem;color:var(--text-mid);text-transform:uppercase;letter-spacing:.05em">${t('photos')}</div>`;
+    html += `<div class="photo-row">`;
+    r.photos.forEach(src => {
+      html += `<img src="${src}" alt="Visit photo" onclick="window.open('${src}','_blank')" style="cursor:pointer" loading="lazy">`;
+    });
+    html += `</div>`;
+  }
+
+  if (r.locationAddress) {
+    html += `<div style="padding:12px 16px;border-top:1px solid var(--border)">
+      <div style="font-weight:800;font-size:0.875rem;color:var(--text-mid);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">${t('location')}</div>
+      <div style="font-size:0.875rem;background:var(--primary-bg);padding:10px;border-radius:10px"><a href="https://maps.google.com/?q=${r.locationLat},${r.locationLng}" target="_blank" style="color:var(--primary);text-decoration:none;">📍 <span style="text-decoration:underline;">${r.locationAddress}</span></a></div>
+      ${r.locationLat ? `<a href="https://maps.google.com/?q=${r.locationLat},${r.locationLng}" target="_blank" style="display:inline-block;margin-top:8px;font-size:0.8125rem;color:var(--primary);font-weight:700">🗺️ Open in Google Maps →</a>` : ''}
+    </div>`;
+  }
+
+  content.innerHTML = html;
+  modal.classList.add('show');
+}
+
+function closeDetail() {
+  document.getElementById('detailModal').classList.remove('show');
+}
+
+function onLangChange() { renderCurrentTab(); }
+</script>
+</body>
+</html>

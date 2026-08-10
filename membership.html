@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="description" content="Sree Lakshmi Trust — Add Membership">
+  <title>New Membership — Sree Lakshmi Trust</title>
+  <link rel="stylesheet" href="css/main.css">
+  <meta name="theme-color" content="#1B2F6B">
+  <style>
+    body { background: var(--bg); }
+    .form-wrap { max-width: 520px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; background: var(--bg); }
+    .pay-method-row { display: flex; gap: 10px; }
+    .pay-method-btn {
+      flex: 1; padding: 12px 8px; border: 2px solid var(--border);
+      border-radius: var(--r-md); background: white; font-size: var(--text-sm);
+      font-weight: 700; cursor: pointer; transition: var(--t); text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      min-height: 70px; justify-content: center;
+    }
+    .pay-method-btn.active { border-color: var(--primary); background: var(--primary-bg); color: var(--primary); }
+    .pay-method-btn .pm-icon { font-size: 1.6rem; }
+    .interest-row { display: flex; gap: 8px; }
+    .interest-btn {
+      flex: 1; padding: 10px 6px; border: 2px solid var(--border);
+      border-radius: var(--r-full); background: white; font-size: var(--text-xs);
+      font-weight: 700; cursor: pointer; transition: var(--t); text-align: center;
+    }
+    .interest-btn.low.active  { background: #27AE60; border-color: #27AE60; color: white; }
+    .interest-btn.medium.active { background: #F39C12; border-color: #F39C12; color: white; }
+    .interest-btn.high.active  { background: #E74C3C; border-color: #E74C3C; color: white; }
+    .status-row { display: flex; gap: 10px; }
+    .status-btn {
+      flex: 1; padding: 12px 8px; border: 2px solid var(--border);
+      border-radius: var(--r-md); background: white; font-size: var(--text-sm);
+      font-weight: 700; cursor: pointer; transition: var(--t); text-align: center;
+    }
+    .status-btn.paid.active { background: #E8F5E9; border-color: #27AE60; color: #1B5E20; }
+    .status-btn.pending.active { background: #FFF8E1; border-color: #F9A825; color: #7f5004; }
+    .form-section { background: white; border-radius: var(--r-lg); padding: 16px; margin-bottom: 14px; box-shadow: var(--shadow-sm); }
+    .form-section-title { font-size: var(--text-xs); font-weight: 800; color: var(--text-mid); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 14px; }
+    .amount-badge { background: var(--primary); color: white; border-radius: var(--r-md); padding: 12px 16px; text-align: center; margin-bottom: 14px; }
+    .amount-badge .amt { font-size: 2rem; font-weight: 800; }
+    .amount-badge .amt-label { font-size: var(--text-xs); opacity: 0.85; margin-top: 2px; }
+  </style>
+</head>
+<body>
+
+<!-- Language Toggle -->
+<div class="lang-toggle">
+  <button class="lang-btn active" data-lang="en" onclick="setLanguage('en')">EN</button>
+  <button class="lang-btn" data-lang="ml" onclick="setLanguage('ml')">മ</button>
+</div>
+
+<div id="toastContainer"></div>
+<div id="loadingOverlay"><div class="spinner"></div><p>Loading...</p></div>
+
+<!-- MAIN FORM -->
+<div class="form-wrap" id="formWrap">
+
+  <!-- Logo bar -->
+  <div style="background:var(--primary-dark);padding:10px 16px;display:flex;align-items:center;gap:10px">
+    <div style="background:white; padding:4px 8px; border-radius:6px; display:inline-flex; align-items:center; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+      <img src="logo.png" alt="Sree Lakshmi Trust" style="height:28px;width:auto;display:block;">
+    </div>
+    <span style="color:white;font-weight:700;font-size:0.9375rem;">New Membership</span>
+    <a href="index.html" style="margin-left:auto;color:rgba(255,255,255,0.7);font-size:1.3rem;line-height:1">←</a>
+  </div>
+
+  <div style="padding:16px;flex:1;overflow-y:auto;">
+
+    <!-- Fixed Amount Banner -->
+    <div class="amount-badge">
+      <div class="amt">₹100</div>
+      <div class="amt-label">Membership Fee</div>
+    </div>
+
+    <!-- Member Info -->
+    <div class="form-section">
+      <div class="form-section-title">👤 Member Information</div>
+      <div class="form-group">
+        <label class="form-label">Full Name <span class="required">*</span></label>
+        <input id="memName" type="text" class="form-input" placeholder="Enter member's full name" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone Number <span class="required">*</span></label>
+        <input id="memPhone" type="tel" class="form-input" placeholder="10-digit mobile number" maxlength="10" pattern="[0-9]{10}">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Place / Area</label>
+        <input id="memPlace" type="text" class="form-input" placeholder="Village / Town / Area" autocomplete="off">
+      </div>
+    </div>
+
+    <!-- Payment Status -->
+    <div class="form-section">
+      <div class="form-section-title">💳 Payment Status</div>
+      <div class="status-row" id="statusRow">
+        <button type="button" class="status-btn paid active" onclick="setStatus('paid', this)">✅ Paid</button>
+        <button type="button" class="status-btn pending" onclick="setStatus('pending', this)">⏳ Pending</button>
+      </div>
+    </div>
+
+    <!-- Payment Method -->
+    <div class="form-section">
+      <div class="form-section-title">💰 Payment Method</div>
+      <div class="pay-method-row" id="payMethodRow">
+        <button type="button" class="pay-method-btn active" onclick="setPayMethod('gpay', this)">
+          <span class="pm-icon"><img src="gpay.png" alt="GPay" style="height:24px;vertical-align:middle;"></span><span>GPay</span>
+        </button>
+        <button type="button" class="pay-method-btn" onclick="setPayMethod('cash', this)">
+          <span class="pm-icon">💵</span><span>Cash</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Interest Level -->
+    <div class="form-section">
+      <div class="form-section-title">⭐ Interest Level</div>
+      <div class="interest-row" id="interestRow">
+        <button type="button" class="interest-btn low" onclick="setInterest('low', this)">Low</button>
+        <button type="button" class="interest-btn medium active" onclick="setInterest('medium', this)">Medium</button>
+        <button type="button" class="interest-btn high" onclick="setInterest('high', this)">High</button>
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <div class="form-section">
+      <div class="form-section-title">📝 Notes (Optional)</div>
+      <textarea id="memNotes" class="form-textarea" placeholder="Any additional notes about this member..." style="min-height:80px;margin-bottom:0"></textarea>
+    </div>
+
+    <!-- Submit -->
+    <button class="btn btn-primary btn-lg" onclick="submitMembership()" style="margin-bottom:24px">
+      ✅ Save Membership
+    </button>
+
+  </div>
+</div>
+
+<!-- SUCCESS SCREEN -->
+<div class="success-screen" id="successScreen">
+  <div class="success-icon">🤝</div>
+  <h2 class="success-title">Membership Saved!</h2>
+  <p class="success-msg">The membership record has been saved successfully.</p>
+  <div style="display:flex;flex-direction:column;gap:12px;width:100%;max-width:320px">
+    <a href="membership.html" class="btn btn-primary btn-lg">New Membership</a>
+    <a href="index.html" class="btn btn-outline">← Home</a>
+  </div>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/app.js"></script>
+
+<script>
+let selectedStatus   = 'paid';
+let selectedPayMethod = 'gpay';
+let selectedInterest  = 'medium';
+
+document.addEventListener('DOMContentLoaded', () => {
+  const user = getUser();
+  if (!user) { window.location.href = 'index.html'; return; }
+  applyTranslations();
+});
+
+function setStatus(val, btn) {
+  selectedStatus = val;
+  document.querySelectorAll('#statusRow .status-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function setPayMethod(val, btn) {
+  selectedPayMethod = val;
+  document.querySelectorAll('#payMethodRow .pay-method-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function setInterest(val, btn) {
+  selectedInterest = val;
+  document.querySelectorAll('#interestRow .interest-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+async function submitMembership() {
+  const name  = document.getElementById('memName').value.trim();
+  const phone = document.getElementById('memPhone').value.trim();
+  const place = document.getElementById('memPlace').value.trim();
+  const notes = document.getElementById('memNotes').value.trim();
+
+  if (!name)  { showToast('Name is required', 'error'); return; }
+  if (!/^\d{10}$/.test(phone)) { showToast('Enter a valid 10-digit phone number', 'error'); return; }
+
+  showLoading('Saving membership...');
+  const user = getUser();
+
+  const record = {
+    type:         'membership',
+    staffName:    user.name,
+    staffPhone:   user.phone,
+    memberName:   name,
+    memberPhone:  phone,
+    place:        place,
+    paymentStatus: selectedStatus,
+    paymentMethod: selectedPayMethod,
+    interestLevel: selectedInterest,
+    amount:       selectedStatus === 'paid' ? 100 : 0,
+    notes:        notes,
+    submittedAt:  new Date().toISOString(),
+    dateStr:      new Date().toISOString().split('T')[0],
+  };
+
+  try { await fbSaveMembership(record); } catch(e) { console.warn(e); }
+
+  // Save locally
+  const local = JSON.parse(localStorage.getItem('trust_memberships') || '[]');
+  local.unshift({ ...record, id: 'local_' + Date.now() });
+  localStorage.setItem('trust_memberships', JSON.stringify(local.slice(0, 500)));
+
+  hideLoading();
+  document.getElementById('formWrap').style.display = 'none';
+  document.getElementById('successScreen').classList.add('show');
+}
+</script>
+</body>
+</html>

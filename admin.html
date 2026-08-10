@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Sree Lakshmi Trust — Admin Dashboard">
+  <title>Admin Dashboard — Sree Lakshmi Trust</title>
+  <link rel="stylesheet" href="css/admin.css">
+  <meta name="theme-color" content="#0F1B14">
+  <style>
+    .ad-tab-bar {
+      display: flex;
+      border-bottom: 1px solid var(--ad-border);
+      margin-bottom: 12px;
+    }
+
+    .ad-tab-btn {
+      flex: 1;
+      padding: 10px 4px;
+      border: none;
+      background: transparent;
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--ad-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+
+    .ad-tab-btn.active {
+      color: var(--ad-green);
+      border-bottom-color: var(--ad-green);
+    }
+
+    .record-card-admin {
+      background: var(--ad-card);
+      border: 1px solid var(--ad-border);
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    @media (min-width: 600px) {
+      .record-card-admin {
+        border-radius: 12px;
+        padding: 14px;
+      }
+    }
+
+    .record-card-admin .rca-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 6px;
+    }
+
+    .record-card-admin .rca-name {
+      font-weight: 700;
+      color: var(--ad-text);
+    }
+
+    .record-card-admin .rca-amount {
+      font-weight: 700;
+      color: var(--ad-green);
+    }
+
+    .record-card-admin .rca-meta {
+      font-size: 0.75rem;
+      color: var(--ad-muted);
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    .record-card-admin .rca-chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .record-card-admin .rca-chip {
+      padding: 3px 8px;
+      border-radius: 99px;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ══════════ ADMIN LOGIN ══════════ -->
+  <div id="loginScreen" class="admin-login">
+    <div class="login-card">
+      <div style="text-align:center">
+        <div
+          style="background:white; padding:10px 16px; border-radius:12px; display:inline-block; margin-bottom:16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+          <img src="logo.png" alt="Sree Lakshmi Trust" style="height:60px;width:auto;display:block;">
+        </div>
+        <h1 class="login-title" data-i18n="adminLoginTitle">Admin Access</h1>
+        <p class="login-sub" style="margin-bottom:24px">Sree Lakshmi Trust</p>
+      </div>
+
+      <form id="loginForm" novalidate>
+        <div class="ad-form-group">
+          <label class="ad-label" data-i18n="adminPassLabel">Password</label>
+          <input type="password" id="adminPassInput" class="ad-input" data-i18n-ph="adminPassPh"
+            placeholder="Enter admin password" autocomplete="current-password">
+        </div>
+        <button type="submit" class="login-btn">
+          <span data-i18n="adminLoginBtn">Login →</span>
+        </button>
+      </form>
+      <p class="login-err" id="loginErr" data-i18n="adminWrongPass">Incorrect password</p>
+    </div>
+  </div>
+
+  <!-- ══════════ ADMIN DASHBOARD ══════════ -->
+  <div id="dashboardScreen" style="display:none">
+
+    <!-- Header -->
+    <div class="ad-header">
+      <div class="ad-brand">
+        <div
+          style="background:white; padding:4px 8px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+          <img src="logo.png" alt="Sree Lakshmi Trust" style="height:32px;width:auto;display:block;">
+        </div>
+        <div>
+          <div class="ad-brand-name">Sree Lakshmi Trust</div>
+          <div class="ad-brand-sub" data-i18n="adminTitle">Admin Dashboard</div>
+        </div>
+      </div>
+      <div class="ad-header-actions">
+        <div class="ad-lang-toggle">
+          <button class="ad-lang-btn active" data-lang="en" onclick="setLanguage('en')">EN</button>
+          <button class="ad-lang-btn" data-lang="ml" onclick="setLanguage('ml')">മ</button>
+        </div>
+        <button class="ad-btn ad-btn-outline" onclick="exportAll()">
+          <span data-i18n="exportCSV">📥 Export CSV</span>
+        </button>
+        <button class="ad-btn ad-btn-ghost" onclick="doLogout()">
+          <span data-i18n="logoutAdmin">Logout</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="adToast"></div>
+
+    <div class="ad-body ad-container">
+
+      <!-- ─── Stats Cards ─── -->
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card green">
+          <div class="stat-icon">📋</div>
+          <div class="stat-val" id="statTotal">—</div>
+          <div class="stat-label" data-i18n="totalRep">Total Reports</div>
+        </div>
+        <div class="stat-card gold">
+          <div class="stat-icon">📅</div>
+          <div class="stat-val" id="statToday">—</div>
+          <div class="stat-label" data-i18n="todayRep">Today</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon">📆</div>
+          <div class="stat-val" id="statWeek">—</div>
+          <div class="stat-label" data-i18n="weekRep">This Week</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-icon">👥</div>
+          <div class="stat-val" id="statStaff">—</div>
+          <div class="stat-label" data-i18n="staffCount">Staff Members</div>
+        </div>
+      </div>
+
+      <!-- ─── Financial Overview ─── -->
+      <div class="ad-section-header" style="margin-top:16px">
+        <div class="ad-section-title">💰 Financial Overview</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <label style="font-size:0.75rem;font-weight:700;color:var(--ad-muted)">Date:</label>
+          <input type="date" id="financeDateFilter" class="ad-input"
+            style="padding:4px 8px;min-height:32px;font-size:0.8rem;width:130px" onchange="updateFinanceStats()">
+        </div>
+      </div>
+
+      <div class="stats-grid" style="grid-template-columns:repeat(4, 1fr);margin-bottom:24px">
+        <!-- 1. All-Time Memberships -->
+        <div class="stat-card" style="background:#F3E5F5;border-color:#CE93D8">
+          <div class="stat-icon" style="background:white;color:#7B1FA2">🤝</div>
+          <div class="stat-val" id="finMemAllTotal" style="color:#4A148C">₹0</div>
+          <div class="stat-label" style="color:#7B1FA2">Memberships (All-Time)</div>
+          <div id="finMemAllSub" style="font-size:0.7rem;color:#6A1B9A;margin-top:4px">Total Collected</div>
+        </div>
+        <!-- 2. All-Time Donations -->
+        <div class="stat-card" style="background:#FFF8E1;border-color:#FFD54F">
+          <div class="stat-icon" style="background:white;color:#FF8F00">💝</div>
+          <div class="stat-val" id="finDonAllTotal" style="color:#E65100">₹0</div>
+          <div class="stat-label" style="color:#FF8F00">Donations (All-Time)</div>
+          <div id="finDonAllSub" style="font-size:0.7rem;color:#F57C00;margin-top:4px">Total Collected</div>
+        </div>
+        <!-- 3. Filtered Memberships -->
+        <div class="stat-card" style="background:#F3E5F5;border-color:#CE93D8;opacity:0.95">
+          <div class="stat-icon" style="background:white;color:#7B1FA2">📅</div>
+          <div class="stat-val" id="finMemTotal" style="color:#4A148C">₹0</div>
+          <div class="stat-label" style="color:#7B1FA2">Memberships (By Date)</div>
+          <div id="finMemSub" style="font-size:0.7rem;color:#6A1B9A;margin-top:4px"><img src="gpay.png" alt="GPay" style="height:10px;vertical-align:middle;margin-right:2px;filter:grayscale(100%) brightness(50%) sepia(100%) hue-rotate(240deg) saturate(300%)"> GPay: ₹0 | Cash: ₹0</div>
+        </div>
+        <!-- 4. Filtered Donations -->
+        <div class="stat-card" style="background:#FFF8E1;border-color:#FFD54F;opacity:0.95">
+          <div class="stat-icon" style="background:white;color:#FF8F00">📅</div>
+          <div class="stat-val" id="finDonTotal" style="color:#E65100">₹0</div>
+          <div class="stat-label" style="color:#FF8F00">Donations (By Date)</div>
+          <div id="finDonSub" style="font-size:0.7rem;color:#F57C00;margin-top:4px"><img src="gpay.png" alt="GPay" style="height:10px;vertical-align:middle;margin-right:2px;filter:grayscale(100%) brightness(50%) sepia(100%) hue-rotate(30deg) saturate(300%)"> GPay: ₹0 | Cash: ₹0</div>
+        </div>
+      </div>
+
+      <!-- ─── Staff Panel ─── -->
+      <div class="ad-section-header">
+        <div class="ad-section-title">👥 <span data-i18n="staffPanel">Staff Members</span></div>
+        <button class="ad-btn ad-btn-outline ad-btn-sm" onclick="clearStaffFilter()">
+          Show All
+        </button>
+      </div>
+      <p style="font-size:0.8rem;color:var(--ad-muted);margin-bottom:12px">👆 Click any staff card below to filter
+        reports by that person</p>
+      <div class="staff-grid" id="staffGrid">
+        <div class="ad-loading">
+          <div class="ad-spinner"></div> Loading staff...
+        </div>
+      </div>
+
+      <!-- ─── Staff Filter Bar ─── -->
+      <div id="staffFilterBar" style="
+      background:var(--ad-card);border:1px solid var(--ad-border);border-radius:14px;
+      padding:16px 18px;margin-bottom:16px;
+      display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    ">
+        <span style="font-size:1.1rem">👤</span>
+        <div style="flex:1;min-width:200px">
+          <label
+            style="display:block;font-size:0.75rem;font-weight:700;color:var(--ad-green);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Filter
+            by Staff Member</label>
+          <select id="staffDropdown" class="ad-input"
+            style="min-height:44px;background:var(--ad-bg);color:var(--ad-text)" onchange="onStaffDropdownChange()">
+            <option value="">👥 All Staff Members</option>
+          </select>
+        </div>
+        <button class="ad-btn ad-btn-outline" onclick="clearStaffFilter()" id="clearFilterBtn"
+          style="min-height:44px;padding:0 18px;display:none">
+          ✕ Clear Filter
+        </button>
+      </div>
+
+      <!-- Active filter banner -->
+      <div id="activeFilterBanner" style="
+      display:none;background:rgba(76,175,132,0.12);border:1px solid var(--ad-green);
+      border-radius:10px;padding:10px 16px;margin-bottom:14px;
+      display:none;align-items:center;justify-content:space-between;gap:8px;
+    ">
+        <span id="activeFilterText" style="font-size:0.875rem;font-weight:700;color:var(--ad-green)"></span>
+        <button onclick="clearStaffFilter()" style="
+        background:transparent;border:1px solid var(--ad-green);border-radius:999px;
+        padding:4px 12px;color:var(--ad-green);font-size:0.75rem;font-weight:700;cursor:pointer
+      ">✕ Show All</button>
+      </div>
+
+      <!-- ─── Reports Panel ─── -->
+      <div class="ad-section-header" style="margin-top:4px">
+        <div class="ad-section-title">📋 <span id="reportsPanelTitle">All Reports</span></div>
+        <div class="ad-filter-row">
+          <button class="filter-btn active" onclick="setFilter('all',this)" data-i18n="filterAll">All Time</button>
+          <button class="filter-btn" onclick="setFilter('today',this)" data-i18n="filterToday">Today</button>
+          <button class="filter-btn" onclick="setFilter('week',this)" data-i18n="filterWeek">This Week</button>
+          <button class="filter-btn" onclick="setFilter('month',this)" data-i18n="filterMonth">This Month</button>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div style="margin-bottom:16px">
+        <input type="text" id="searchInput" class="ad-input" data-i18n-ph="searchPlaceholder"
+          placeholder="Search by name, village, category..." oninput="renderReportsList()" style="max-width:100%">
+      </div>
+
+      <!-- Tabs -->
+      <div class="ad-tab-bar">
+        <button class="ad-tab-btn active" onclick="setAdminTab('assessments', this)">📋 Assessments</button>
+        <button class="ad-tab-btn" onclick="setAdminTab('memberships', this)">🤝 Memberships</button>
+        <button class="ad-tab-btn" onclick="setAdminTab('donations', this)">💝 Donations</button>
+      </div>
+
+      <div class="reports-panel" id="reportsPanel">
+        <div class="ad-loading">
+          <div class="ad-spinner"></div> Loading reports...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ REPORT DETAIL MODAL ══════════ -->
+  <div class="ad-modal-bg" id="reportModal">
+    <div class="ad-modal">
+      <div class="ad-modal-header">
+        <div class="ad-modal-title" id="modalTitle">Report Detail</div>
+        <button class="ad-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="ad-modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- Firebase + Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/app.js"></script>
+
+  <script>
+    /* ════════════════════════════════════
+       ADMIN DASHBOARD LOGIC
+       ════════════════════════════════════ */
+    let allAssessments = [];
+    let allMemberships = [];
+    let allDonations = [];
+    let currentFilter = 'all';
+    let currentAdminTab = 'assessments';
+    let selectedStaffPhone = null; // null = show all
+
+    /* ─── Auth ─────────────────────────────────────────────── */
+    document.addEventListener('DOMContentLoaded', () => {
+      applyTranslations();
+      if (sessionStorage.getItem('trust_admin_auth') === 'yes') {
+        showDashboard();
+      }
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const pass = document.getElementById('adminPassInput').value;
+      if (pass === ADMIN_PASSWORD) {
+        sessionStorage.setItem('trust_admin_auth', 'yes');
+        document.getElementById('loginErr').classList.remove('show');
+        showDashboard();
+      } else {
+        document.getElementById('loginErr').classList.add('show');
+        document.getElementById('adminPassInput').value = '';
+        document.getElementById('adminPassInput').focus();
+      }
+    });
+
+    function doLogout() {
+      sessionStorage.removeItem('trust_admin_auth');
+      window.location.reload();
+    }
+
+    /* ─── Dashboard Load ────────────────────────────────────── */
+    async function showDashboard() {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('dashboardScreen').style.display = 'block';
+      applyTranslations();
+      await loadAll();
+    }
+
+    let unsubAssessments = null;
+    let unsubMemberships = null;
+    let unsubDonations = null;
+
+    async function loadAll() {
+      // Set default date filter
+      document.getElementById('financeDateFilter').value = new Date().toISOString().split('T')[0];
+
+      // Setup Real-time listeners
+      unsubAssessments = fbListenAllAssessments((data) => {
+        allAssessments = data;
+        updateDashboardView();
+      });
+
+      unsubMemberships = fbListenAllMemberships((data) => {
+        allMemberships = data;
+        updateDashboardView();
+      });
+
+      unsubDonations = fbListenAllDonations((data) => {
+        allDonations = data;
+        updateDashboardView();
+      });
+    }
+
+    // Debounce the UI updates so they don't fire rapidly at startup
+    let updateTimer = null;
+    function updateDashboardView() {
+      if (updateTimer) clearTimeout(updateTimer);
+      updateTimer = setTimeout(() => {
+        updateFinanceStats();
+        updateStats();
+        renderStaffGrid();
+        renderReportsList();
+      }, 50);
+    }
+
+    /* ─── Stats ─────────────────────────────────────────────── */
+    function updateStats() {
+      const src = selectedStaffPhone
+        ? allAssessments.filter(a => a.staffPhone === selectedStaffPhone)
+        : allAssessments;
+      document.getElementById('statTotal').textContent = src.length;
+      document.getElementById('statToday').textContent = src.filter(a => isToday(a.submittedAt || a.localDate)).length;
+      document.getElementById('statWeek').textContent = src.filter(a => isThisWeek(a.submittedAt || a.localDate)).length;
+      // Unique staff
+      const uniqueStaff = new Set(allAssessments.map(a => a.staffPhone)).size;
+      document.getElementById('statStaff').textContent = uniqueStaff;
+    }
+
+    /* ─── Financial Stats ───────────────────────────────────── */
+    function updateFinanceStats() {
+      const dateStr = document.getElementById('financeDateFilter').value;
+      
+      // 1. All-Time Staff Filter
+      let allTimeMems = allMemberships;
+      let allTimeDons = allDonations;
+      if (selectedStaffPhone) {
+        allTimeMems = allTimeMems.filter(m => m.staffPhone === selectedStaffPhone);
+        allTimeDons = allTimeDons.filter(d => d.staffPhone === selectedStaffPhone);
+      }
+
+      // Calculate All-Time Totals (Cards 1 & 2)
+      const allPaidMems = allTimeMems.filter(m => m.paymentStatus === 'paid');
+      const allMemTotal = allPaidMems.length * 100;
+      const allMemGpay  = allPaidMems.filter(m => m.paymentMethod === 'gpay').length * 100;
+      const allMemCash  = allPaidMems.filter(m => m.paymentMethod === 'cash').length * 100;
+
+      const allDonTotal = allTimeDons.reduce((s,d) => s + (d.amount||0), 0);
+      const allDonGpay  = allTimeDons.filter(d => d.paymentMethod === 'gpay').reduce((s,d) => s + (d.amount||0), 0);
+      const allDonCash  = allTimeDons.filter(d => d.paymentMethod === 'cash').reduce((s,d) => s + (d.amount||0), 0);
+
+      document.getElementById('finMemAllTotal').textContent = `₹${allMemTotal.toLocaleString('en-IN')}`;
+      document.getElementById('finMemAllSub').innerHTML = `<img src="gpay.png" alt="GPay" style="height:10px;vertical-align:middle;margin-right:2px;filter:grayscale(100%) brightness(50%) sepia(100%) hue-rotate(240deg) saturate(300%)"> GPay: ₹${allMemGpay.toLocaleString('en-IN')} | 💵 Cash: ₹${allMemCash.toLocaleString('en-IN')}`;
+
+      document.getElementById('finDonAllTotal').textContent = `₹${allDonTotal.toLocaleString('en-IN')}`;
+      document.getElementById('finDonAllSub').innerHTML = `<img src="gpay.png" alt="GPay" style="height:10px;vertical-align:middle;margin-right:2px;filter:grayscale(100%) brightness(50%) sepia(100%) hue-rotate(30deg) saturate(300%)"> GPay: ₹${allDonGpay.toLocaleString('en-IN')} | 💵 Cash: ₹${allDonCash.toLocaleString('en-IN')}`;
+
+      // 2. Date-Filtered Totals (Cards 3 & 4)
+      const filterFn = (r) => {
+        if (!dateStr) return true;
+        return r.dateStr === dateStr || (r.submittedAt && r.submittedAt.startsWith(dateStr));
+      };
+      
+      const filteredMems = allTimeMems.filter(filterFn);
+      const paidMems = filteredMems.filter(m => m.paymentStatus === 'paid');
+      const memTotal = paidMems.length * 100;
+      const memGpay  = paidMems.filter(m => m.paymentMethod === 'gpay').length * 100;
+      const memCash  = paidMems.filter(m => m.paymentMethod === 'cash').length * 100;
+      
+      document.getElementById('finMemTotal').textContent = `₹${memTotal.toLocaleString('en-IN')}`;
+      document.getElementById('finMemSub').innerHTML = `<img src="gpay.png" alt="GPay" style="height:10px;vertical-align:middle;margin-right:2px;filter:grayscale(100%) brightness(50%) sepia(100%) hue-rotate(240deg) saturate(300%)"> GPay: ₹${memGpay.toLocaleString('en-IN')} | 💵 Cash: ₹${memCash.toLocaleString('en-IN')} (Count: ${paidMems.length})`;
+
+      const filteredDons = allTimeDons.filter(filterFn);
+      const donTotal = filteredDons.reduce((s,d) => s + (d.amount||0), 0);
+      const donGpay  = filteredDons.filter(d => d.paymentMethod === 'gpay').reduce((s,d) => s + (d.amount||0), 0);
+      const donCash  = filteredDons.filter(d => d.paymentMethod === 'cash').reduce((s,d) => s + (d.amount||0), 0);
+
+      document.getElementById('finDonTotal').textContent = `₹${donTotal.toLocaleString('en-IN')}`;
+      document.getElementById('finDonSub').innerHTML = `<img src="gpay.png" alt="GPay" style="height:10px;vertical-align:middle;margin-right:2px;filter:grayscale(100%) brightness(50%) sepia(100%) hue-rotate(30deg) saturate(300%)"> GPay: ₹${donGpay.toLocaleString('en-IN')} | 💵 Cash: ₹${donCash.toLocaleString('en-IN')} (Count: ${filteredDons.length})`;
+
+      const grandTotal = memTotal + donTotal;
+      const grandGpay = memGpay + donGpay;
+      const grandCash = memCash + donCash;
+
+      document.getElementById('finGrandTotal').textContent = `₹${grandTotal.toLocaleString('en-IN')}`;
+      document.getElementById('finGrandSub').innerHTML = `<img src="gpay.png" alt="GPay" style="height:10px;vertical-align:middle;margin-right:2px;filter:grayscale(100%) brightness(50%) sepia(100%) hue-rotate(100deg) saturate(300%)"> GPay: ₹${grandGpay.toLocaleString('en-IN')} | 💵 Cash: ₹${grandCash.toLocaleString('en-IN')}`;
+    }
+
+    /* ─── Staff Grid + Dropdown ──────────────────────────────── */
+    function buildStaffMap() {
+      const staffMap = {};
+
+      const initStaff = (key, name) => {
+        if (!staffMap[key]) staffMap[key] = { name: name || 'Unknown', phone: key, count: 0, lastDate: null, memCount: 0, donAmt: 0 };
+      };
+
+      allAssessments.forEach(a => {
+        const key = a.staffPhone || 'unknown';
+        initStaff(key, a.staffName);
+        staffMap[key].count++;
+        const d = new Date(a.submittedAt || a.localDate || 0);
+        if (!staffMap[key].lastDate || d > staffMap[key].lastDate) staffMap[key].lastDate = d;
+      });
+
+      allMemberships.forEach(m => {
+        const key = m.staffPhone || 'unknown';
+        initStaff(key, m.staffName);
+        if (m.paymentStatus === 'paid') staffMap[key].memCount++;
+        const d = new Date(m.submittedAt || 0);
+        if (!staffMap[key].lastDate || d > staffMap[key].lastDate) staffMap[key].lastDate = d;
+      });
+
+      allDonations.forEach(d => {
+        const key = d.staffPhone || 'unknown';
+        initStaff(key, d.staffName);
+        staffMap[key].donAmt += (d.amount || 0);
+        const dt = new Date(d.submittedAt || 0);
+        if (!staffMap[key].lastDate || dt > staffMap[key].lastDate) staffMap[key].lastDate = dt;
+      });
+
+      return staffMap;
+    }
+
+    function populateStaffDropdown(staffMap) {
+      const sel = document.getElementById('staffDropdown');
+      const current = sel.value;
+      sel.innerHTML = '<option value="">👥 All Staff Members</option>';
+      Object.entries(staffMap)
+        .sort((a, b) => b[1].count - a[1].count)
+        .forEach(([phone, info]) => {
+          const opt = document.createElement('option');
+          opt.value = phone;
+          opt.textContent = `${info.name} — ${info.count} ${info.count === 1 ? 'report' : 'reports'} (📞 ${info.phone})`;
+          if (phone === current) opt.selected = true;
+          sel.appendChild(opt);
+        });
+    }
+
+    function onStaffDropdownChange() {
+      const phone = document.getElementById('staffDropdown').value;
+      applyStaffFilter(phone);
+    }
+
+    function applyStaffFilter(phone) {
+      selectedStaffPhone = phone || null;
+      const staffMap = buildStaffMap();
+      const banner = document.getElementById('activeFilterBanner');
+      const clearBtn = document.getElementById('clearFilterBtn');
+
+      if (selectedStaffPhone) {
+        const info = staffMap[selectedStaffPhone];
+        const name = info ? info.name : selectedStaffPhone;
+        document.getElementById('reportsPanelTitle').textContent = name + "'s Reports";
+        document.getElementById('activeFilterText').textContent = '✅ Showing reports for: ' + name;
+        banner.style.display = 'flex';
+        clearBtn.style.display = 'flex';
+        document.getElementById('staffDropdown').value = selectedStaffPhone;
+      } else {
+        document.getElementById('reportsPanelTitle').textContent = 'All Reports';
+        banner.style.display = 'none';
+        clearBtn.style.display = 'none';
+        document.getElementById('staffDropdown').value = '';
+      }
+      renderStaffGrid();
+      updateStats();
+      updateFinanceStats();
+      renderReportsList();
+      // Scroll to reports
+      document.getElementById('staffFilterBar').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function clearStaffFilter() {
+      applyStaffFilter(null);
+    }
+
+    function renderStaffGrid() {
+      const grid = document.getElementById('staffGrid');
+      const staffMap = buildStaffMap();
+      const staffList = Object.entries(staffMap).sort((a, b) => b[1].count - a[1].count);
+
+      // Populate dropdown too
+      populateStaffDropdown(staffMap);
+
+      if (!staffList.length) {
+        grid.innerHTML = `<div class="ad-empty" style="grid-column:1/-1"><div class="ad-empty-icon">👥</div><h3>${t('noData')}</h3></div>`;
+        return;
+      }
+
+      grid.innerHTML = '';
+      staffList.forEach(([phone, info]) => {
+        const isActive = selectedStaffPhone === phone;
+        const initial = info.name.charAt(0).toUpperCase();
+        const lastStr = info.lastDate ? info.lastDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '';
+        const card = document.createElement('div');
+        card.className = `staff-card ${isActive ? 'active' : ''}`;
+        card.title = 'Click to filter reports for ' + info.name;
+        card.style.cursor = 'pointer';
+        card.innerHTML = `
+      <div class="staff-avatar" style="${isActive ? 'outline:3px solid var(--ad-green);outline-offset:2px' : ''}">${initial}</div>
+      <div class="staff-name">${info.name}</div>
+      <div class="staff-phone">📞 ${info.phone}</div>
+      <div class="staff-count" style="${isActive ? 'background:var(--ad-green);color:var(--ad-bg)' : ''}">${info.count} ${t(info.count === 1 ? 'report' : 'reports')}</div>
+      <div style="font-size:0.75rem;font-weight:700;color:var(--ad-muted);margin-top:8px">🤝 ${info.memCount} Paid Members</div>
+      <div style="font-size:0.75rem;font-weight:700;color:var(--ad-muted);margin-top:2px">💝 ₹${info.donAmt.toLocaleString('en-IN')} Donations</div>
+      ${lastStr ? `<div class="staff-last" style="margin-top:6px">Last Action: ${lastStr}</div>` : ''}
+      <div style="font-size:0.7rem;margin-top:6px;color:${isActive ? 'var(--ad-green)' : 'var(--ad-muted)'}">${isActive ? '✅ Filtered' : 'Tap to filter'}</div>`;
+        card.addEventListener('click', () => {
+          if (selectedStaffPhone === phone) clearStaffFilter();
+          else applyStaffFilter(phone);
+        });
+        grid.appendChild(card);
+      });
+    }
+
+    /* ─── Reports List ──────────────────────────────────────── */
+    function setFilter(filter, btn) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderReportsList();
+    }
+
+    function getFilteredData(source) {
+      let reports = source;
+      if (selectedStaffPhone) reports = reports.filter(a => a.staffPhone === selectedStaffPhone);
+      const search = document.getElementById('searchInput')?.value?.toLowerCase() || '';
+      if (search) {
+        reports = reports.filter(a =>
+          (a.personName || a.memberName || a.donorName || '').toLowerCase().includes(search) ||
+          (a.staffName || '').toLowerCase().includes(search) ||
+          (a.village || a.place || '').toLowerCase().includes(search) ||
+          (a.address || '').toLowerCase().includes(search) ||
+          (a.categories || []).some(c => c.label.toLowerCase().includes(search))
+        );
+      }
+      if (currentFilter === 'today') reports = reports.filter(a => isToday(a.submittedAt || a.localDate));
+      if (currentFilter === 'week') reports = reports.filter(a => isThisWeek(a.submittedAt || a.localDate));
+      if (currentFilter === 'month') reports = reports.filter(a => isThisMonth(a.submittedAt || a.localDate));
+      return reports;
+    }
+
+    function getFilteredReports() {
+      return getFilteredData(allAssessments);
+    }
+
+    function setAdminTab(tab, btn) {
+      currentAdminTab = tab;
+      document.querySelectorAll('.ad-tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderReportsList();
+    }
+
+    function renderReportsList() {
+      if (currentAdminTab === 'assessments') return renderAssessmentsList();
+      if (currentAdminTab === 'memberships') return renderMembershipsList();
+      if (currentAdminTab === 'donations') return renderDonationsList();
+    }
+
+    function renderAssessmentsList() {
+      const panel = document.getElementById('reportsPanel');
+      const reports = getFilteredReports();
+
+      if (!reports.length) {
+        panel.innerHTML = `<div class="ad-empty"><div class="ad-empty-icon">📋</div><h3>${t('noData')}</h3><p>Try changing the filter or search</p></div>`;
+        return;
+      }
+
+      let html = `<div class="reports-list">`;
+      reports.forEach((r, i) => {
+        const dt = r.submittedAt || r.localDate || '';
+        const dtStr = dt ? new Date(dt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+        const timeStr = dt ? new Date(dt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '';
+        const cats = (r.categories || []).slice(0, 4);
+        const more = (r.categories || []).length - 4;
+        let chips = cats.map(c => `<span class="ad-chip">${c.icon} ${c.label}</span>`).join('');
+        if (more > 0) chips += `<span class="ad-chip">+${more}</span>`;
+
+        html += `<div class="ad-report-row" onclick="openReportDetail(${i})">
+      <div class="ad-report-left">
+        <div class="ad-report-name">${r.personName || t('na')}</div>
+        <div class="ad-report-staff">👤 ${r.staffName || ''} ${r.staffPhone ? '· ' + r.staffPhone : ''}</div>
+        <div class="ad-report-cats">${chips}</div>
+      </div>
+      <div class="ad-report-right">
+        <div class="ad-report-date">${dtStr}</div>
+        <div class="ad-report-date" style="opacity:.6">${timeStr}</div>
+        ${r.locationAddress ? `<div class="ad-report-loc">${r.locationAddress.substring(0, 50)}${r.locationAddress.length > 50 ? '...' : ''}</div>` : ''}
+        ${r.photos && r.photos.length ? `<div style="font-size:0.7rem;color:var(--ad-muted);margin-top:3px">📷 ${r.photos.length}</div>` : ''}
+      </div>
+    </div>`;
+      });
+      html += `</div>`;
+      panel.innerHTML = html;
+    }
+
+    function renderMembershipsList() {
+      const panel = document.getElementById('reportsPanel');
+      const reports = getFilteredData(allMemberships);
+      if (!reports.length) {
+        panel.innerHTML = `<div class="ad-empty"><div class="ad-empty-icon">🤝</div><h3>No memberships found</h3></div>`;
+        return;
+      }
+      let html = `<div class="reports-list">`;
+      reports.forEach(m => {
+        html += `<div class="record-card-admin">
+      <div class="rca-header">
+        <div class="rca-name">🤝 ${m.memberName}</div>
+        <div class="rca-amount">${m.paymentStatus === 'paid' ? '₹100' : '<span style="color:#F9A825">Pending</span>'}</div>
+      </div>
+      <div class="rca-meta">👤 ${m.staffName} (${m.staffPhone}) ${m.place ? '· ' + m.place : ''} <br> ${formatDate(m.submittedAt)}</div>
+      <div class="rca-chips">
+        <span class="rca-chip" style="background:rgba(255,255,255,0.05);border:1px solid var(--ad-border);color:var(--ad-text)">${m.paymentMethod === 'gpay' ? '<img src="gpay.png" style="height:10px;margin-right:2px">GPay' : '💵 Cash'}</span>
+        <span class="rca-chip" style="background:rgba(76,175,132,0.1);color:var(--ad-green)">${m.paymentStatus === 'paid' ? '✅ Paid' : '⏳ Pending'}</span>
+        <span class="rca-chip" style="background:rgba(255,160,0,0.1);color:#FFC107">⭐ ${m.interestLevel?.toUpperCase() || 'UNKNOWN'}</span>
+      </div>
+    </div>`;
+      });
+      html += `</div>`;
+      panel.innerHTML = html;
+    }
+
+    function renderDonationsList() {
+      const panel = document.getElementById('reportsPanel');
+      const reports = getFilteredData(allDonations);
+      if (!reports.length) {
+        panel.innerHTML = `<div class="ad-empty"><div class="ad-empty-icon">💝</div><h3>No donations found</h3></div>`;
+        return;
+      }
+      let html = `<div class="reports-list">`;
+      reports.forEach(d => {
+        html += `<div class="record-card-admin">
+      <div class="rca-header">
+        <div class="rca-name">💝 ${d.donorName}</div>
+        <div class="rca-amount">₹${(d.amount || 0).toLocaleString('en-IN')}</div>
+      </div>
+      <div class="rca-meta">👤 ${d.staffName} (${d.staffPhone}) ${d.place ? '· ' + d.place : ''} <br> ${formatDate(d.submittedAt)}</div>
+      <div class="rca-chips">
+        <span class="rca-chip" style="background:rgba(255,255,255,0.05);border:1px solid var(--ad-border);color:var(--ad-text)">${d.paymentMethod === 'gpay' ? '<img src="gpay.png" style="height:10px;margin-right:2px">GPay' : '💵 Cash'}</span>
+        <span class="rca-chip" style="background:rgba(255,160,0,0.1);color:#FFC107">⭐ ${d.interestLevel?.toUpperCase() || 'UNKNOWN'}</span>
+      </div>
+    </div>`;
+      });
+      html += `</div>`;
+      panel.innerHTML = html;
+    }
+
+    /* ─── Report Detail Modal ───────────────────────────────── */
+    function openReportDetail(idx) {
+      const reports = getFilteredReports();
+      const r = reports[idx];
+      if (!r) return;
+      document.getElementById('modalTitle').textContent = r.personName || t('na');
+      const dt = r.submittedAt || r.localDate || '';
+
+      let html = `
+    <div class="ad-detail-row"><span class="ad-detail-label">${t('staff')}</span><span class="ad-detail-val">👤 ${r.staffName || ''} · ${r.staffPhone || ''}</span></div>
+    <div class="ad-detail-row"><span class="ad-detail-label">${t('date')}</span><span class="ad-detail-val">${formatDateTime(dt)}</span></div>
+    ${r.visitDate ? `<div class="ad-detail-row"><span class="ad-detail-label">Visit Date</span><span class="ad-detail-val">${formatDate(r.visitDate)}</span></div>` : ''}
+    ${r.age ? `<div class="ad-detail-row"><span class="ad-detail-label">${t('age')}</span><span class="ad-detail-val">${r.age} ${t('years')}</span></div>` : ''}
+    ${r.address ? `<div class="ad-detail-row"><span class="ad-detail-label">${t('address')}</span><span class="ad-detail-val">${r.address}</span></div>` : ''}
+    ${r.village ? `<div class="ad-detail-row"><span class="ad-detail-label">${t('village')}</span><span class="ad-detail-val">${r.village}</span></div>` : ''}
+    ${r.locationAddress ? `<div class="ad-detail-row"><span class="ad-detail-label">${t('location')}</span><span class="ad-detail-val"><a href="https://maps.google.com/?q=${r.locationLat},${r.locationLng}" target="_blank" style="color:var(--primary);text-decoration:underline;">${r.locationAddress}</a></span></div>` : ''}
+    ${r.locationLat ? `<div class="ad-detail-row"><span class="ad-detail-label">GPS Coords</span><span class="ad-detail-val"><a href="https://maps.google.com/?q=${r.locationLat},${r.locationLng}" target="_blank" style="color:var(--ad-green)">🗺️ ${r.locationLat.toFixed(5)}, ${r.locationLng.toFixed(5)}</a></span></div>` : ''}`;
+
+      if (r.categories && r.categories.length) {
+        html += `<div class="ad-cat-section"><div class="ad-cat-header">Issues Found (${r.categories.length})</div>`;
+        r.categories.forEach(c => {
+          const sc = sevColor(c.severity);
+          html += `<div class="ad-cat-item">
+        <div class="ad-cat-item-top">
+          <span class="ad-cat-icon">${c.icon}</span>
+          <span class="ad-cat-name">${c.label}</span>
+          <span class="ad-sev-badge" style="background:${sc}22;color:${sc}">${sevLabel(c.severity)}</span>
+        </div>
+        ${c.notes ? `<div class="ad-cat-note">${c.notes}</div>` : '<div class="ad-cat-note" style="opacity:.5">No notes</div>'}
+      </div>`;
+        });
+        html += `</div>`;
+      }
+
+      if (r.photos && r.photos.length) {
+        html += `<div style="margin-top:16px"><div class="ad-cat-header">Photos (${r.photos.length})</div>`;
+        html += `<div class="ad-photo-grid">`;
+        r.photos.forEach(src => {
+          html += `<img src="${src}" class="ad-photo-img" alt="Visit photo" onclick="window.open('${src}','_blank')" loading="lazy">`;
+        });
+        html += `</div></div>`;
+      }
+
+      document.getElementById('modalBody').innerHTML = html;
+      document.getElementById('reportModal').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('reportModal').classList.remove('show');
+    }
+
+    /* ─── Export ────────────────────────────────────────────── */
+    function exportAll() {
+      const reports = getFilteredReports();
+      if (!reports.length) { showAdToast('No reports to export', 'error'); return; }
+      exportToCSV(reports);
+      showAdToast('✅ CSV downloaded!', 'success');
+    }
+
+    /* ─── Admin Toast ────────────────────────────────────────── */
+    function showAdToast(msg, type = 'info') {
+      const c = document.getElementById('adToast');
+      const el = document.createElement('div');
+      el.className = `ad-toast ${type}`;
+      el.textContent = msg;
+      c.appendChild(el);
+      setTimeout(() => el.remove(), 3000);
+    }
+
+    /* ─── Language change ────────────────────────────────────── */
+    function onLangChange() {
+      if (sessionStorage.getItem('trust_admin_auth') === 'yes') {
+        renderStaffGrid();
+        renderReportsList();
+      }
+    }
+
+    /* close modal on backdrop click */
+    document.getElementById('reportModal').addEventListener('click', function (e) {
+      if (e.target === this) closeModal();
+    });
+  </script>
+</body>
+
+</html>
