@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trust-assess-v1';
+const CACHE_NAME = 'trust-assess-v2';
 const CACHE_URLS = [
   './index.html',
   './form.html',
