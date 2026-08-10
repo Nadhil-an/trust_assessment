@@ -61,6 +61,15 @@
 
   <div style="padding:16px;flex:1;overflow-y:auto;">
 
+    <!-- Voucher ID -->
+    <div class="form-section">
+      <div class="form-section-title">🎫 Voucher Information</div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Voucher ID <span class="required">*</span></label>
+        <input id="donVoucher" type="text" class="form-input" placeholder="Enter Voucher ID" autocomplete="off" style="text-transform:uppercase;font-weight:700;">
+      </div>
+    </div>
+
     <!-- Donor Info -->
     <div class="form-section">
       <div class="form-section-title">👤 Donor Information</div>
@@ -220,12 +229,14 @@ function setInterest(val, btn) {
 }
 
 async function submitDonation() {
+  const voucher= document.getElementById('donVoucher').value.trim().toUpperCase();
   const name   = document.getElementById('donName').value.trim();
   const phone  = document.getElementById('donPhone').value.trim();
   const place  = document.getElementById('donPlace').value.trim();
   const amount = parseFloat(document.getElementById('donAmount').value);
   const notes  = document.getElementById('donNotes').value.trim();
 
+  if (!voucher){ showToast('Voucher ID is required', 'error'); return; }
   if (!name)  { showToast('Name is required', 'error'); return; }
   if (!/^\d{10}$/.test(phone)) { showToast('Enter a valid 10-digit phone number', 'error'); return; }
   if (!amount || amount <= 0)  { showToast('Enter a valid donation amount', 'error'); return; }
@@ -243,6 +254,7 @@ async function submitDonation() {
 
   const record = {
     type:          'donation',
+    voucherId:     voucher,
     staffName:     user.name,
     staffPhone:    user.phone,
     donorName:     name,
