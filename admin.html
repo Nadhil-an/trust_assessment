@@ -107,12 +107,15 @@
       </div>
 
       <form id="loginForm" novalidate style="display:flex; flex-direction:column; align-items:center;">
-        <div class="ad-form-group" style="width:100%; text-align:center;">
+        <div class="ad-form-group" style="width:100%; display:flex; flex-direction:column; align-items:center;">
           <label class="ad-label" data-i18n="adminPassLabel" style="text-align:center;">Password</label>
-          <input type="password" id="adminPassInput" class="ad-input" data-i18n-ph="adminPassPh"
-            placeholder="Enter admin password" autocomplete="current-password" style="text-align:center;">
+          <div style="position:relative; width:100%; max-width:280px;">
+            <input type="password" id="adminPassInput" class="ad-input" data-i18n-ph="adminPassPh"
+              placeholder="Enter admin password" autocomplete="current-password" style="text-align:center; padding-right:40px;">
+            <button type="button" onclick="togglePass(this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1.2rem; color:var(--ad-muted); padding:4px;">👁️</button>
+          </div>
         </div>
-        <button type="submit" class="login-btn">
+        <button type="submit" class="login-btn" style="max-width:280px;">
           <span data-i18n="adminLoginBtn">Login →</span>
         </button>
       </form>
@@ -329,6 +332,17 @@
     let currentFilter = 'all';
     let currentAdminTab = 'assessments';
     let selectedStaffPhone = null; // null = show all
+
+    function togglePass(btn) {
+      const ip = document.getElementById('adminPassInput');
+      if (ip.type === 'password') {
+        ip.type = 'text';
+        btn.textContent = '🙈';
+      } else {
+        ip.type = 'password';
+        btn.textContent = '👁️';
+      }
+    }
 
     /* ─── Auth ─────────────────────────────────────────────── */
     document.addEventListener('DOMContentLoaded', () => {

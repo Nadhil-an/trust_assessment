@@ -15,7 +15,7 @@ const FIREBASE_CONFIG = {
 };
 
 // Admin password — change this to something secure!
-const ADMIN_PASSWORD = "TrustAdmin@2024";
+const ADMIN_PASSWORD = "Trust@2025";
 
 let db = null;
 let storage = null;
