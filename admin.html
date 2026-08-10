@@ -1156,7 +1156,7 @@
 
         staff.txns.forEach((txn, idx) => {
           const isMem = txn._type === 'membership';
-          const color = isMem ? '#AB47BC' : '#F57C00';
+          const color = '#388E3C'; // Received amount is always green
           const icon  = isMem ? '🤝' : '💝';
           const label = isMem ? txn.memberName  : txn.donorName;
           const payBadge = txn.paymentMethod === 'gpay'
