@@ -282,10 +282,13 @@
         </div>
       </div>
 
-      <!-- Search -->
-      <div style="margin-bottom:16px">
+      <!-- Search & Category Filter -->
+      <div style="margin-bottom:16px; display:flex; gap:10px; flex-wrap:wrap;">
         <input type="text" id="searchInput" class="ad-input" data-i18n-ph="searchPlaceholder"
-          placeholder="Search by name, village, category..." oninput="renderReportsList()" style="max-width:100%">
+          placeholder="Search by name, village, category..." oninput="renderReportsList()" style="flex:1; min-width:200px;">
+        <select id="categoryFilter" class="ad-input" style="flex:1; min-width:200px; background:var(--ad-bg); color:var(--ad-text)" onchange="renderReportsList()">
+          <option value="">🏷️ All Problem Categories</option>
+        </select>
       </div>
 
       <!-- Tabs -->
@@ -415,6 +418,7 @@
     function updateDashboardView() {
       if (updateTimer) clearTimeout(updateTimer);
       updateTimer = setTimeout(() => {
+        populateCategoryDropdown();
         updateFinanceStats();
         updateStats();
         renderStaffGrid();
@@ -630,6 +634,7 @@
     function getFilteredData(source) {
       let reports = source;
       if (selectedStaffPhone) reports = reports.filter(a => a.staffPhone === selectedStaffPhone);
+      
       const search = document.getElementById('searchInput')?.value?.toLowerCase() || '';
       if (search) {
         reports = reports.filter(a =>
@@ -640,6 +645,12 @@
           (a.categories || []).some(c => c.label.toLowerCase().includes(search))
         );
       }
+
+      const catFilter = document.getElementById('categoryFilter')?.value;
+      if (catFilter && currentAdminTab === 'assessments') {
+        reports = reports.filter(a => (a.categories || []).some(c => c.label === catFilter));
+      }
+
       if (currentFilter === 'today') reports = reports.filter(a => isToday(a.submittedAt || a.localDate));
       if (currentFilter === 'week') reports = reports.filter(a => isThisWeek(a.submittedAt || a.localDate));
       if (currentFilter === 'month') reports = reports.filter(a => isThisMonth(a.submittedAt || a.localDate));
@@ -650,10 +661,37 @@
       return getFilteredData(allAssessments);
     }
 
+    function populateCategoryDropdown() {
+      const sel = document.getElementById('categoryFilter');
+      const current = sel.value;
+      const categories = new Set();
+      
+      allAssessments.forEach(a => {
+        (a.categories || []).forEach(c => {
+          if (c.label) categories.add(c.label);
+        });
+      });
+
+      const sortedCats = Array.from(categories).sort();
+      
+      sel.innerHTML = '<option value="">🏷️ All Problem Categories</option>';
+      sortedCats.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        opt.textContent = '⚠️ ' + cat;
+        if (cat === current) opt.selected = true;
+        sel.appendChild(opt);
+      });
+    }
+
     function setAdminTab(tab, btn) {
       currentAdminTab = tab;
       document.querySelectorAll('.ad-tab-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
+      
+      // Hide category filter on Memberships/Donations tabs
+      document.getElementById('categoryFilter').style.display = (tab === 'assessments') ? 'block' : 'none';
+      
       renderReportsList();
     }
 
