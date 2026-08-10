@@ -44,11 +44,12 @@ function initFirebase() {
 async function fbSaveUser(user) {
   if (!db) return;
   try {
-    await db.collection("users").doc(user.phone).set({
+    const promise = db.collection("users").doc(user.phone).set({
       name: user.name,
       phone: user.phone,
       registeredAt: firebase.firestore.FieldValue.serverTimestamp(),
     }, { merge: true });
+    await Promise.race([ promise, new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 4000)) ]);
   } catch (e) { console.warn("fbSaveUser:", e.message); }
 }
 
@@ -61,10 +62,12 @@ async function fbSaveAssessment(data) {
     return { id: 'local_' + Date.now() };
   }
   try {
-    const ref = await db.collection("assessments").add({
+    const promise = db.collection("assessments").add({
       ...data,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
+    const ref = await Promise.race([ promise, new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 4000)) ]);
+    
     // Try to flush offline queue
     flushOfflineQueue();
     return { id: ref.id };
@@ -158,7 +161,8 @@ async function fbSaveMembership(data) {
     return { id: 'local_' + Date.now() };
   }
   try {
-    const ref = await db.collection("memberships").add({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    const promise = db.collection("memberships").add({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    const ref = await Promise.race([ promise, new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 4000)) ]);
     return { id: ref.id };
   } catch(e) {
     console.warn("fbSaveMembership:", e.message);
@@ -204,7 +208,8 @@ async function fbSaveDonation(data) {
     return { id: 'local_' + Date.now() };
   }
   try {
-    const ref = await db.collection("donations").add({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    const promise = db.collection("donations").add({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    const ref = await Promise.race([ promise, new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 4000)) ]);
     return { id: ref.id };
   } catch(e) {
     console.warn("fbSaveDonation:", e.message);
