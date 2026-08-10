@@ -205,6 +205,27 @@ async function fbGetAllUsers() {
   }
 }
 
+async function fbDeleteUser(phone) {
+  if (!db) return false;
+  try {
+    await db.collection("users").doc(phone).delete();
+    return true;
+  } catch (e) {
+    console.warn("fbDeleteUser:", e.message);
+    return false;
+  }
+}
+
+function fbListenAllUsers(callback) {
+  if (!db) { callback([]); return () => {}; }
+  return db.collection("users")
+    .orderBy("registeredAt", "desc")
+    .onSnapshot(
+      snap => callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
+      err => console.warn("fbListenAllUsers:", err.message)
+    );
+}
+
 /* ─── Membership Helpers ────────────────────────────────────── */
 async function fbSaveMembership(data) {
   if (!db) {

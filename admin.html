@@ -143,6 +143,7 @@
         <button class="nav-item" onclick="switchView('assessments', this)">📋 Assessments</button>
         <button class="nav-item" onclick="switchView('memberships', this)">🤝 Memberships</button>
         <button class="nav-item" onclick="switchView('donations', this)">💝 Donations</button>
+        <button class="nav-item" onclick="switchView('volunteers', this)">👥 Volunteers</button>
       </nav>
 
       <div class="sidebar-footer">
@@ -323,6 +324,17 @@
           </div>
         </div> <!-- End Reports View -->
 
+        <!-- VOLUNTEERS VIEW -->
+        <div id="view-volunteers" class="app-view">
+          <div class="ad-section-header" style="margin-bottom:18px">
+            <div class="ad-section-title">👥 Registered Volunteers</div>
+            <div id="volunteerCount" style="font-size:0.875rem;color:var(--ad-muted)"></div>
+          </div>
+          <div id="volunteersPanel">
+            <div class="ad-loading"><div class="ad-spinner"></div> Loading volunteers...</div>
+          </div>
+        </div> <!-- End Volunteers View -->
+
       </div>
     </main>
   </div>
@@ -359,6 +371,7 @@
     let allAssessments = [];
     let allMemberships = [];
     let allDonations = [];
+    let allUsers = [];
     let currentFilter = 'all';
     let currentAdminTab = 'assessments';
     let selectedStaffPhone = null; // null = show all
@@ -412,6 +425,7 @@
     let unsubAssessments = null;
     let unsubMemberships = null;
     let unsubDonations = null;
+    let unsubUsers = null;
 
     async function loadAll() {
       // Set default date filter
@@ -431,6 +445,13 @@
       unsubDonations = fbListenAllDonations((data) => {
         allDonations = data;
         updateDashboardView();
+      });
+
+      unsubUsers = fbListenAllUsers((data) => {
+        allUsers = data;
+        if (document.getElementById('view-volunteers').classList.contains('active')) {
+          renderVolunteersList();
+        }
       });
     }
 
@@ -728,21 +749,27 @@
       document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       
+      const title = document.getElementById('topNavTitle');
       const vDash = document.getElementById('view-dashboard');
       const vRep  = document.getElementById('view-reports');
-      const title = document.getElementById('topNavTitle');
+      const vVol  = document.getElementById('view-volunteers');
+
+      // Hide all views first
+      vDash.classList.remove('active');
+      vRep.classList.remove('active');
+      vVol.classList.remove('active');
 
       if (tab === 'dashboard') {
         vDash.classList.add('active');
-        vRep.classList.remove('active');
         title.textContent = 'Dashboard Overview';
+      } else if (tab === 'volunteers') {
+        vVol.classList.add('active');
+        title.textContent = '👥 Registered Volunteers';
+        renderVolunteersList();
       } else {
-        vDash.classList.remove('active');
         vRep.classList.add('active');
-        
         currentAdminTab = tab;
         const catFilter = document.getElementById('categoryFilter');
-        
         if (tab === 'assessments') {
            title.textContent = '📋 Assessment Reports';
            catFilter.style.display = 'block';
@@ -853,6 +880,72 @@
       });
       html += `</div>`;
       panel.innerHTML = html;
+    }
+
+    /* ─── Volunteers List ───────────────────────────────────── */
+    function renderVolunteersList() {
+      const panel = document.getElementById('volunteersPanel');
+      const countEl = document.getElementById('volunteerCount');
+
+      if (!allUsers.length) {
+        panel.innerHTML = `<div class="ad-empty"><div class="ad-empty-icon">👥</div><h3>No Volunteers Registered</h3><p>Volunteers will appear here after they register via the app.</p></div>`;
+        countEl.textContent = '';
+        return;
+      }
+
+      countEl.textContent = `${allUsers.length} volunteer${allUsers.length !== 1 ? 's' : ''} registered`;
+
+      let html = `<div class="reports-list">`;
+      allUsers.forEach(u => {
+        // Count how many assessments this volunteer has submitted
+        const assessCount = allAssessments.filter(a => a.staffPhone === u.phone).length;
+        const regDate = u.registeredAt ? formatDate(u.registeredAt.toDate ? u.registeredAt.toDate() : u.registeredAt) : 'Unknown';
+
+        html += `
+        <div class="ad-report-row" style="cursor:default">
+          <div class="ad-report-left">
+            <div class="ad-report-name" style="display:flex;align-items:center;gap:8px">
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:var(--ad-green);color:#fff;font-weight:800;font-size:1.1rem;flex-shrink:0">
+                ${(u.name || '?')[0].toUpperCase()}
+              </span>
+              ${u.name || 'Unknown'}
+            </div>
+            <div class="ad-report-staff" style="margin-top:4px">📱 ${u.phone || u.id}</div>
+            <div class="ad-report-staff">📅 Registered: ${regDate}</div>
+          </div>
+          <div class="ad-report-right" style="align-items:flex-end;gap:8px">
+            <div class="ad-chip" style="background:rgba(76,175,132,0.15);color:var(--ad-green)">
+              📋 ${assessCount} report${assessCount !== 1 ? 's' : ''}
+            </div>
+            <button 
+              class="ad-btn" 
+              style="background:#d32f2f;color:white;border:none;padding:6px 14px;font-size:0.8rem"
+              onclick="deleteVolunteer('${u.phone || u.id}', '${(u.name || 'this volunteer').replace(/'/g,"\\'")}', event)"
+            >🚫 Remove</button>
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+      panel.innerHTML = html;
+    }
+
+    async function deleteVolunteer(phone, name, event) {
+      if (!confirm(`Remove "${name}" from volunteers?\n\nThis will revoke their access immediately. Their submitted reports will remain in the database.`)) return;
+
+      const btn = event.currentTarget;
+      const originalText = btn.innerHTML;
+      btn.innerHTML = `<div class="ad-spinner" style="width:14px;height:14px;border-width:2px;display:inline-block"></div>`;
+      btn.disabled = true;
+
+      const success = await fbDeleteUser(phone);
+      if (success) {
+        showAdToast(`✅ "${name}" has been removed. They can no longer log in.`, 'success');
+        // allUsers will auto-refresh via the real-time listener
+      } else {
+        showAdToast('❌ Failed to remove volunteer. Check your connection.', 'error');
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
     }
 
     /* ─── Report Detail Modal ───────────────────────────────── */
