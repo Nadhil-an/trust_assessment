@@ -5,12 +5,13 @@
 
 // ⚠️ REPLACE THIS WITH YOUR OWN FIREBASE CONFIG
 const FIREBASE_CONFIG = {
-  apiKey:            "YOUR_API_KEY",
-  authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId:         "YOUR_PROJECT_ID",
-  storageBucket:     "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId:             "YOUR_APP_ID"
+  apiKey: "AIzaSyArqiMNp9M6wmd4aoqc8EtXEAgbRQ3GuPo",
+  authDomain: "sreelakshmi-chits.firebaseapp.com",
+  projectId: "sreelakshmi-chits",
+  storageBucket: "sreelakshmi-chits.firebasestorage.app",
+  messagingSenderId: "450563211318",
+  appId: "1:450563211318:web:6906edd169fcf018819897",
+  measurementId: "G-T4H3Y12BP1"
 };
 
 // Admin password — change this to something secure!
