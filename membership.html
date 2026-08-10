@@ -130,6 +130,21 @@
       <textarea id="memNotes" class="form-textarea" placeholder="Any additional notes about this member..." style="min-height:80px;margin-bottom:0"></textarea>
     </div>
 
+    <!-- Photo Upload Section -->
+    <div class="form-section">
+      <div class="form-section-title">📷 Photo / ID Proof (Optional)</div>
+      
+      <div style="display:flex; gap:10px; margin-bottom:12px;">
+         <button type="button" class="btn btn-primary" style="flex:1; font-size:0.875rem" onclick="document.getElementById('photoInputCam').click()">📷 Take Photo</button>
+         <button type="button" class="btn btn-outline" style="flex:1; font-size:0.875rem" onclick="document.getElementById('photoInputGal').click()">🖼️ Gallery</button>
+      </div>
+
+      <div class="photo-grid" id="photoGrid"></div>
+      <p class="form-hint" style="margin-top:8px">You can add up to 5 photos</p>
+      <input type="file" id="photoInputCam" accept="image/*" capture="environment" style="display:none">
+      <input type="file" id="photoInputGal" accept="image/*" style="display:none" multiple>
+    </div>
+
     <!-- Submit -->
     <button class="btn btn-primary btn-lg" onclick="submitMembership()" style="margin-bottom:24px">
       ✅ Save Membership
@@ -161,12 +176,51 @@
 let selectedStatus   = 'paid';
 let selectedPayMethod = 'gpay';
 let selectedInterest  = 'medium';
+let photos = [];
 
 document.addEventListener('DOMContentLoaded', () => {
   const user = getUser();
   if (!user) { window.location.href = 'index.html'; return; }
   applyTranslations();
+  renderPhotoGrid();
 });
+
+function renderPhotoGrid() {
+  const grid = document.getElementById('photoGrid');
+  grid.innerHTML = '';
+  photos.forEach((src, i) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'photo-thumb';
+    thumb.innerHTML = `
+      <img src="${src}" alt="Photo ${i+1}" loading="lazy">
+      <button class="photo-remove" onclick="removePhoto(${i})">✕</button>`;
+    grid.appendChild(thumb);
+  });
+}
+
+async function handlePhotoUpload(e) {
+  const files = Array.from(e.target.files || []);
+  if (!files.length) return;
+  showLoading('Compressing...');
+  for (const file of files) {
+    if (photos.length >= 5) break;
+    try {
+      const compressed = await compressImage(file, 1200, 1200, 0.75);
+      photos.push(compressed);
+    } catch { showToast('Could not process photo', 'error'); }
+  }
+  hideLoading();
+  renderPhotoGrid();
+  e.target.value = '';
+}
+
+document.getElementById('photoInputCam').addEventListener('change', handlePhotoUpload);
+document.getElementById('photoInputGal').addEventListener('change', handlePhotoUpload);
+
+function removePhoto(idx) {
+  photos.splice(idx, 1);
+  renderPhotoGrid();
+}
 
 function setStatus(val, btn) {
   selectedStatus = val;
@@ -198,6 +252,14 @@ async function submitMembership() {
   showLoading('Saving membership...');
   const user = getUser();
 
+  let photoUrls = [];
+  for (let i = 0; i < photos.length; i++) {
+    try {
+      const url = await uploadPhoto(photos[i], `mem_${Date.now()}_${i}.jpg`);
+      photoUrls.push(url);
+    } catch { photoUrls.push(photos[i]); }
+  }
+
   const record = {
     type:         'membership',
     staffName:    user.name,
@@ -210,6 +272,7 @@ async function submitMembership() {
     interestLevel: selectedInterest,
     amount:       selectedStatus === 'paid' ? 100 : 0,
     notes:        notes,
+    photos:       photoUrls,
     submittedAt:  new Date().toISOString(),
     dateStr:      new Date().toISOString().split('T')[0],
   };
