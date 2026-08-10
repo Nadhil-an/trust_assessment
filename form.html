@@ -484,7 +484,7 @@ function startVoice(catId) {
   recognition.onstart = () => {
     activeVoiceId = catId;
     voiceBtn.classList.add('recording');
-    voiceBtn.innerHTML = `⏹ <span>${t('stopRecording')}</span>`;
+    voiceBtn.innerHTML = `<span>${t('stopRecording')}</span>`;
     voiceInd.classList.add('show');
   };
 
