@@ -253,6 +253,17 @@ async function fbSaveMembership(data) {
   }
 }
 
+async function fbDeleteMembership(id) {
+  if (!db) return false;
+  try {
+    await db.collection("memberships").doc(id).delete();
+    return true;
+  } catch (e) {
+    console.warn("fbDeleteMembership:", e.message);
+    return false;
+  }
+}
+
 async function fbGetMyMemberships(phone) {
   if (!db) return JSON.parse(localStorage.getItem('trust_memberships') || '[]');
   try {
@@ -297,6 +308,17 @@ async function fbSaveDonation(data) {
     const q = JSON.parse(localStorage.getItem('trust_don_queue') || '[]');
     q.push(data); localStorage.setItem('trust_don_queue', JSON.stringify(q));
     return { id: 'local_' + Date.now() };
+  }
+}
+
+async function fbDeleteDonation(id) {
+  if (!db) return false;
+  try {
+    await db.collection("donations").doc(id).delete();
+    return true;
+  } catch (e) {
+    console.warn("fbDeleteDonation:", e.message);
+    return false;
   }
 }
 
