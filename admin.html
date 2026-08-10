@@ -356,6 +356,23 @@
     <img id="imagePreviewSrc" style="max-width:95%; max-height:95%; object-fit:contain; border-radius:8px;">
   </div>
 
+  <!-- ══════════ CUSTOM CONFIRM MODAL ══════════ -->
+  <div class="ad-modal-bg" id="confirmModal" style="z-index: 10000;">
+    <div class="ad-modal" style="max-width: 400px;">
+      <div class="ad-modal-header" style="border-bottom: none; padding-bottom: 0;">
+        <div class="ad-modal-title" id="confirmTitle" style="color: var(--ad-text); font-size: 1.2rem;">Confirm Action</div>
+        <button class="ad-close" onclick="closeConfirmModal()">✕</button>
+      </div>
+      <div class="ad-modal-body" style="padding-top: 10px;">
+        <p id="confirmMessage" style="color: var(--ad-muted); margin-bottom: 24px; font-size: 0.95rem; line-height: 1.5;"></p>
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+          <button class="ad-btn ad-btn-outline" style="min-height: 40px; padding: 0 20px;" onclick="closeConfirmModal()">Cancel</button>
+          <button class="ad-btn" id="confirmActionBtn" style="min-height: 40px; padding: 0 20px; background: #d32f2f; color: white; border: none;">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Firebase + Scripts -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
@@ -930,22 +947,28 @@
     }
 
     async function deleteVolunteer(phone, name, event) {
-      if (!confirm(`Remove "${name}" from volunteers?\n\nThis will revoke their access immediately. Their submitted reports will remain in the database.`)) return;
-
       const btn = event.currentTarget;
-      const originalText = btn.innerHTML;
-      btn.innerHTML = `<div class="ad-spinner" style="width:14px;height:14px;border-width:2px;display:inline-block"></div>`;
-      btn.disabled = true;
+      
+      openConfirmModal(
+        `Remove Volunteer?`,
+        `Are you sure you want to remove <strong>${name}</strong>?<br><br>This will revoke their access immediately. Their submitted reports will remain safely in the database.`,
+        `🚫 Remove`,
+        `#d32f2f`,
+        async () => {
+          const originalText = btn.innerHTML;
+          btn.innerHTML = `<div class="ad-spinner" style="width:14px;height:14px;border-width:2px;display:inline-block"></div>`;
+          btn.disabled = true;
 
-      const success = await fbDeleteUser(phone);
-      if (success) {
-        showAdToast(`✅ "${name}" has been removed. They can no longer log in.`, 'success');
-        // allUsers will auto-refresh via the real-time listener
-      } else {
-        showAdToast('❌ Failed to remove volunteer. Check your connection.', 'error');
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-      }
+          const success = await fbDeleteUser(phone);
+          if (success) {
+            showAdToast(`✅ "${name}" has been removed. They can no longer log in.`, 'success');
+          } else {
+            showAdToast('❌ Failed to remove volunteer. Check your connection.', 'error');
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+          }
+        }
+      );
     }
 
     /* ─── Report Detail Modal ───────────────────────────────── */
@@ -1006,23 +1029,30 @@
        window.open(`form.html?editId=${id}&admin=true`, '_blank');
     }
     
-    async function deleteReport(id, event) {
-       if (!confirm("Are you sure you want to delete this report? This cannot be undone.")) return;
-       
+    function deleteReport(id, event) {
        const btn = event.currentTarget;
-       const originalText = btn.innerHTML;
-       btn.innerHTML = `<div class="ad-spinner" style="width:16px;height:16px;border-width:2px;display:inline-block"></div>`;
-       btn.disabled = true;
        
-       const success = await fbDeleteAssessment(id);
-       if (success) {
-          showAdToast("Report deleted successfully", "success");
-          closeModal();
-       } else {
-          showAdToast("Failed to delete report", "error");
-          btn.innerHTML = originalText;
-          btn.disabled = false;
-       }
+       openConfirmModal(
+         `Delete Report?`,
+         `Are you sure you want to completely delete this report?<br><br>This action cannot be undone.`,
+         `🗑️ Delete`,
+         `#d32f2f`,
+         async () => {
+           const originalText = btn.innerHTML;
+           btn.innerHTML = `<div class="ad-spinner" style="width:16px;height:16px;border-width:2px;display:inline-block"></div>`;
+           btn.disabled = true;
+           
+           const success = await fbDeleteAssessment(id);
+           if (success) {
+              showAdToast("Report deleted successfully", "success");
+              closeModal();
+           } else {
+              showAdToast("Failed to delete report", "error");
+              btn.innerHTML = originalText;
+              btn.disabled = false;
+           }
+         }
+       );
     }
 
     function openImagePreview(src) {
@@ -1060,9 +1090,39 @@
       }
     }
 
-    /* close modal on backdrop click */
+    /* ─── Custom Confirm Modal Logic ─── */
+    let confirmCallback = null;
+
+    function openConfirmModal(title, message, btnText, btnColor, onConfirm) {
+      document.getElementById('confirmTitle').textContent = title;
+      document.getElementById('confirmMessage').innerHTML = message;
+      
+      const actionBtn = document.getElementById('confirmActionBtn');
+      actionBtn.innerHTML = btnText;
+      actionBtn.style.background = btnColor;
+      
+      // Remove old event listeners to prevent multiple fires
+      const newActionBtn = actionBtn.cloneNode(true);
+      actionBtn.parentNode.replaceChild(newActionBtn, actionBtn);
+      
+      newActionBtn.addEventListener('click', () => {
+        if (onConfirm) onConfirm();
+        closeConfirmModal();
+      });
+
+      document.getElementById('confirmModal').classList.add('show');
+    }
+
+    function closeConfirmModal() {
+      document.getElementById('confirmModal').classList.remove('show');
+    }
+
+    /* close modals on backdrop click */
     document.getElementById('reportModal').addEventListener('click', function (e) {
       if (e.target === this) closeModal();
+    });
+    document.getElementById('confirmModal').addEventListener('click', function (e) {
+      if (e.target === this) closeConfirmModal();
     });
   </script>
 </body>
