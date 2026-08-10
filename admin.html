@@ -497,8 +497,11 @@
     let unsubUsers = null;
 
     async function loadAll() {
-      // Set default date filter
-      document.getElementById('financeDateFilter').value = new Date().toISOString().split('T')[0];
+      // Set default date filters
+      const todayStr = new Date().toISOString().split('T')[0];
+      document.getElementById('financeDateFilter').value = todayStr;
+      document.getElementById('dbFromDate').value = todayStr;
+      document.getElementById('dbToDate').value = todayStr;
 
       // Setup Real-time listeners
       unsubAssessments = fbListenAllAssessments((data) => {
