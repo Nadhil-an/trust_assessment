@@ -460,7 +460,12 @@
       // 2. Date-Filtered Totals (Cards 3 & 4)
       const filterFn = (r) => {
         if (!dateStr) return true;
-        return r.dateStr === dateStr || (r.submittedAt && r.submittedAt.startsWith(dateStr));
+        if (r.dateStr === dateStr) return true;
+        let tsStr = '';
+        if (r.submittedAt) {
+          tsStr = r.submittedAt.toDate ? r.submittedAt.toDate().toISOString() : String(r.submittedAt);
+        }
+        return tsStr.startsWith(dateStr);
       };
       
       const filteredMems = allTimeMems.filter(filterFn);
@@ -500,24 +505,24 @@
         const key = a.staffPhone || 'unknown';
         initStaff(key, a.staffName);
         staffMap[key].count++;
-        const d = new Date(a.submittedAt || a.localDate || 0);
-        if (!staffMap[key].lastDate || d > staffMap[key].lastDate) staffMap[key].lastDate = d;
+        const d = a.submittedAt?.toDate ? a.submittedAt.toDate() : new Date(a.submittedAt || a.localDate || 0);
+        if (!isNaN(d) && (!staffMap[key].lastDate || d > staffMap[key].lastDate)) staffMap[key].lastDate = d;
       });
 
       allMemberships.forEach(m => {
         const key = m.staffPhone || 'unknown';
         initStaff(key, m.staffName);
         if (m.paymentStatus === 'paid') staffMap[key].memCount++;
-        const d = new Date(m.submittedAt || 0);
-        if (!staffMap[key].lastDate || d > staffMap[key].lastDate) staffMap[key].lastDate = d;
+        const d = m.submittedAt?.toDate ? m.submittedAt.toDate() : new Date(m.submittedAt || 0);
+        if (!isNaN(d) && (!staffMap[key].lastDate || d > staffMap[key].lastDate)) staffMap[key].lastDate = d;
       });
 
       allDonations.forEach(d => {
         const key = d.staffPhone || 'unknown';
         initStaff(key, d.staffName);
         staffMap[key].donAmt += (d.amount || 0);
-        const dt = new Date(d.submittedAt || 0);
-        if (!staffMap[key].lastDate || dt > staffMap[key].lastDate) staffMap[key].lastDate = dt;
+        const dt = d.submittedAt?.toDate ? d.submittedAt.toDate() : new Date(d.submittedAt || 0);
+        if (!isNaN(dt) && (!staffMap[key].lastDate || dt > staffMap[key].lastDate)) staffMap[key].lastDate = dt;
       });
 
       return staffMap;
@@ -592,7 +597,7 @@
       staffList.forEach(([phone, info]) => {
         const isActive = selectedStaffPhone === phone;
         const initial = info.name.charAt(0).toUpperCase();
-        const lastStr = info.lastDate ? info.lastDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '';
+        const lastStr = (info.lastDate && !isNaN(info.lastDate)) ? info.lastDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '';
         const card = document.createElement('div');
         card.className = `staff-card ${isActive ? 'active' : ''}`;
         card.title = 'Click to filter reports for ' + info.name;
