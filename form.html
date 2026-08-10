@@ -413,7 +413,7 @@ function startVoice(catId) {
     return;
   }
   recognition = new SR();
-  recognition.lang = currentLang === 'ml' ? 'ml-IN' : 'en-IN';
+  recognition.lang = 'ml-IN'; // Always use Malayalam dictation, even if UI is in English
   recognition.continuous = true;
   recognition.interimResults = true;
 
