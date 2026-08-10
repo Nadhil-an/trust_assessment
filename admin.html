@@ -485,12 +485,6 @@
       document.getElementById('finDonTotal').textContent = `₹${donTotal.toLocaleString('en-IN')}`;
       document.getElementById('finDonSub').innerHTML = `<img src="gpay.png" alt="GPay" style="height:10px;vertical-align:middle;margin-right:2px;filter:grayscale(100%) brightness(50%) sepia(100%) hue-rotate(30deg) saturate(300%)"> GPay: ₹${donGpay.toLocaleString('en-IN')} | 💵 Cash: ₹${donCash.toLocaleString('en-IN')} (Count: ${filteredDons.length})`;
 
-      const grandTotal = memTotal + donTotal;
-      const grandGpay = memGpay + donGpay;
-      const grandCash = memCash + donCash;
-
-      document.getElementById('finGrandTotal').textContent = `₹${grandTotal.toLocaleString('en-IN')}`;
-      document.getElementById('finGrandSub').innerHTML = `<img src="gpay.png" alt="GPay" style="height:10px;vertical-align:middle;margin-right:2px;filter:grayscale(100%) brightness(50%) sepia(100%) hue-rotate(100deg) saturate(300%)"> GPay: ₹${grandGpay.toLocaleString('en-IN')} | 💵 Cash: ₹${grandCash.toLocaleString('en-IN')}`;
     }
 
     /* ─── Staff Grid + Dropdown ──────────────────────────────── */
