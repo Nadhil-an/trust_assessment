@@ -354,22 +354,31 @@
             <div class="ad-section-title">📒 Day Book</div>
           </div>
 
-          <!-- Date Range Filter -->
+          <!-- Search & Date Filter Controls -->
           <div style="background:var(--ad-card);border:1px solid var(--ad-border);border-radius:14px;padding:16px;margin-bottom:20px;">
-            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:12px;margin-bottom:12px;">
-              <div>
-                <label style="display:block;font-size:0.75rem;font-weight:700;color:var(--ad-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">From Date</label>
+            
+            <!-- Search Bar -->
+            <div style="margin-bottom:16px;">
+              <input type="text" id="dbSearch" class="ad-input" placeholder="🔍 Search by name, phone, or voucher..." style="width:100%;min-height:44px;background:var(--ad-bg);color:var(--ad-text);font-size:0.95rem;padding:0 14px;" oninput="renderDayBook()">
+            </div>
+
+            <!-- Date Filter Row -->
+            <div style="display:flex;gap:12px;margin-bottom:16px;">
+              <div style="flex:1">
+                <label style="display:block;font-size:0.7rem;font-weight:800;color:var(--ad-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em">From Date</label>
                 <input type="date" id="dbFromDate" class="ad-input" style="width:100%;min-height:44px;background:var(--ad-bg);color:var(--ad-text);font-size:0.9rem" onchange="renderDayBook()">
               </div>
-              <div>
-                <label style="display:block;font-size:0.75rem;font-weight:700;color:var(--ad-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">To Date</label>
+              <div style="flex:1">
+                <label style="display:block;font-size:0.7rem;font-weight:800;color:var(--ad-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em">To Date</label>
                 <input type="date" id="dbToDate" class="ad-input" style="width:100%;min-height:44px;background:var(--ad-bg);color:var(--ad-text);font-size:0.9rem" onchange="renderDayBook()">
               </div>
             </div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              <button class="ad-btn ad-btn-outline" style="flex:1;min-width:100px;min-height:40px;font-size:0.85rem;padding:0 12px" onclick="dbSetToday()">📅 Today</button>
-              <button class="ad-btn ad-btn-outline" style="flex:1;min-width:100px;min-height:40px;font-size:0.85rem;padding:0 12px" onclick="dbSetThisMonth()">📆 This Month</button>
-              <button class="ad-btn ad-btn-outline" style="flex:1;min-width:100px;min-height:40px;font-size:0.85rem;padding:0 12px" onclick="dbClearFilter()">✕ All Time</button>
+
+            <!-- Quick Date Buttons -->
+            <div style="display:flex;gap:8px;">
+              <button class="ad-btn ad-btn-outline" style="flex:1;padding:8px 0;font-size:0.8rem;white-space:nowrap;justify-content:center" onclick="dbSetToday()">📅 Today</button>
+              <button class="ad-btn ad-btn-outline" style="flex:1;padding:8px 0;font-size:0.8rem;white-space:nowrap;justify-content:center" onclick="dbSetThisMonth()">📆 Month</button>
+              <button class="ad-btn ad-btn-outline" style="flex:1;padding:8px 0;font-size:0.8rem;white-space:nowrap;justify-content:center" onclick="dbClearFilter()">✕ All</button>
             </div>
           </div>
 
@@ -1148,17 +1157,29 @@
       const panel = document.getElementById('dbTransactionList');
       const from  = document.getElementById('dbFromDate').value;
       const to    = document.getElementById('dbToDate').value;
+      const qInput = document.getElementById('dbSearch');
+      const q      = qInput ? qInput.value.toLowerCase().trim() : '';
 
       // Filter memberships
       const filteredMem = allMemberships.filter(m => {
         const d = m.submittedAt || m.localDate || null;
-        return dbDateInRange(d);
+        if (!dbDateInRange(d)) return false;
+        if (q) {
+           const str = `${m.memberName} ${m.memberPhone} ${m.staffName} ${m.staffPhone} ${m.voucherId}`.toLowerCase();
+           if (!str.includes(q)) return false;
+        }
+        return true;
       });
 
       // Filter donations
       const filteredDon = allDonations.filter(d => {
         const dt = d.submittedAt || d.localDate || null;
-        return dbDateInRange(dt);
+        if (!dbDateInRange(dt)) return false;
+        if (q) {
+           const str = `${d.donorName} ${d.donorPhone} ${d.staffName} ${d.staffPhone} ${d.voucherId}`.toLowerCase();
+           if (!str.includes(q)) return false;
+        }
+        return true;
       });
 
       // Totals
