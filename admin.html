@@ -1048,29 +1048,35 @@
         const regDate = u.registeredAt ? formatDate(u.registeredAt.toDate ? u.registeredAt.toDate() : u.registeredAt) : 'Unknown';
 
         html += `
-        <div class="ad-report-row" style="cursor:default">
-          <div class="ad-report-left">
-            <div class="ad-report-name" style="display:flex;align-items:center;gap:8px">
-              <span style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:var(--ad-green);color:#fff;font-weight:800;font-size:1.1rem;flex-shrink:0">
+        <div class="ad-report-row" style="cursor:default; display:flex; flex-direction:column; gap:12px; padding:16px;">
+          <!-- Top: Info and Chips -->
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+            <div style="display:flex; gap:12px; align-items:center;">
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;background:var(--ad-green);color:#fff;font-weight:800;font-size:1.2rem;flex-shrink:0">
                 ${(u.name || '?')[0].toUpperCase()}
               </span>
-              ${u.name || 'Unknown'}
+              <div>
+                <div style="font-weight:700;font-size:1.05rem;color:var(--ad-text);margin-bottom:2px;line-height:1.2;">${u.name || 'Unknown'}</div>
+                <div style="font-size:0.85rem;color:var(--ad-muted);margin-bottom:2px;">📱 ${u.phone || u.id}</div>
+                <div style="font-size:0.8rem;color:var(--ad-muted);">📅 Reg: ${regDate}</div>
+              </div>
             </div>
-            <div class="ad-report-staff" style="margin-top:4px">📱 ${u.phone || u.id}</div>
-            <div class="ad-report-staff">📅 Registered: ${regDate}</div>
-          </div>
-          <div class="ad-report-right" style="align-items:flex-end;gap:8px">
-            <div class="ad-chip" style="background:rgba(76,175,132,0.15);color:var(--ad-green)">
+            
+            <div class="ad-chip" style="background:rgba(76,175,132,0.15);color:var(--ad-green);flex-shrink:0;margin:0;">
               📋 ${assessCount} report${assessCount !== 1 ? 's' : ''}
             </div>
+          </div>
+          
+          <!-- Bottom: Action Buttons -->
+          <div style="display:flex; gap:10px; margin-top:4px;">
             <button 
               class="ad-btn ad-btn-outline" 
-              style="padding:6px 14px;font-size:0.8rem;margin-bottom:4px"
+              style="flex:1; padding:8px; font-size:0.85rem; justify-content:center; min-height:36px;"
               onclick="openVoucherSettings('${u.phone || u.id}', '${(u.name || 'this volunteer').replace(/'/g,"\\'")}')"
             >🎫 Voucher Settings</button>
             <button 
               class="ad-btn" 
-              style="background:#d32f2f;color:white;border:none;padding:6px 14px;font-size:0.8rem"
+              style="flex:1; background:#d32f2f; color:white; border:none; padding:8px; font-size:0.85rem; justify-content:center; min-height:36px;"
               onclick="deleteVolunteer('${u.phone || u.id}', '${(u.name || 'this volunteer').replace(/'/g,"\\'")}', event)"
             >🚫 Remove</button>
           </div>
