@@ -152,16 +152,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!user) return;
   applyTranslations();
   showLoading();
-  [allReports, allMemberships, allDonations] = await Promise.all([
-    fbGetMyAssessments(user.phone),
-    fbGetMyMemberships(user.phone),
-    fbGetMyDonations(user.phone),
-  ]);
-  
   document.getElementById('reportDateFilter').value = new Date().toISOString().split('T')[0];
 
+  fbListenMyAssessments(user.phone, (data) => {
+    allReports = data;
+    renderCurrentTab();
+  });
+  
+  fbListenMyMemberships(user.phone, (data) => {
+    allMemberships = data;
+    renderCurrentTab();
+  });
+  
+  fbListenMyDonations(user.phone, (data) => {
+    allDonations = data;
+    renderCurrentTab();
+  });
+
   hideLoading();
-  renderCurrentTab();
 });
 
 function switchTab(tab, btn) {
@@ -460,12 +468,8 @@ async function deleteAssessment(id) {
     const success = await fbDeleteAssessment(id);
     hideLoading();
     if (success !== false) {
-      allReports = allReports.filter(x => x.id !== id);
-      let local = JSON.parse(localStorage.getItem('trust_reports') || '[]');
-      local = local.filter(x => x.id !== id);
-      localStorage.setItem('trust_reports', JSON.stringify(local));
       showToast('Assessment deleted', 'success');
-      renderCurrentTab();
+      // The real-time listener will auto-update the list
     } else {
       showToast('Failed to delete assessment. Check permissions.', 'error');
     }
@@ -481,12 +485,7 @@ async function deleteMembership(id) {
     const success = await fbDeleteMembership(id);
     hideLoading();
     if (success !== false) {
-      allMemberships = allMemberships.filter(x => x.id !== id);
-      let local = JSON.parse(localStorage.getItem('trust_memberships') || '[]');
-      local = local.filter(x => x.id !== id);
-      localStorage.setItem('trust_memberships', JSON.stringify(local));
       showToast('Membership deleted', 'success');
-      renderCurrentTab();
     } else {
       showToast('Failed to delete membership. Check permissions.', 'error');
     }
@@ -502,12 +501,7 @@ async function deleteDonation(id) {
     const success = await fbDeleteDonation(id);
     hideLoading();
     if (success !== false) {
-      allDonations = allDonations.filter(x => x.id !== id);
-      let local = JSON.parse(localStorage.getItem('trust_donations') || '[]');
-      local = local.filter(x => x.id !== id);
-      localStorage.setItem('trust_donations', JSON.stringify(local));
       showToast('Donation deleted', 'success');
-      renderCurrentTab();
     } else {
       showToast('Failed to delete donation. Check permissions.', 'error');
     }

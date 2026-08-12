@@ -418,3 +418,48 @@ async function fbIncrementVoucher(phone) {
     return false;
   }
 }
+
+function fbListenMyAssessments(phone, callback) {
+  if (!db) {
+    callback(JSON.parse(localStorage.getItem('trust_reports') || '[]'));
+    return () => {};
+  }
+  return db.collection("assessments")
+    .where("staffPhone", "==", phone)
+    .orderBy("submittedAt", "desc")
+    .onSnapshot(snap => {
+      const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      localStorage.setItem('trust_reports', JSON.stringify(data));
+      callback(data);
+    }, err => console.warn("fbListenMyAssessments:", err.message));
+}
+
+function fbListenMyMemberships(phone, callback) {
+  if (!db) {
+    callback(JSON.parse(localStorage.getItem('trust_memberships') || '[]'));
+    return () => {};
+  }
+  return db.collection("memberships")
+    .where("staffPhone", "==", phone)
+    .orderBy("submittedAt", "desc")
+    .onSnapshot(snap => {
+      const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      localStorage.setItem('trust_memberships', JSON.stringify(data));
+      callback(data);
+    }, err => console.warn("fbListenMyMemberships:", err.message));
+}
+
+function fbListenMyDonations(phone, callback) {
+  if (!db) {
+    callback(JSON.parse(localStorage.getItem('trust_donations') || '[]'));
+    return () => {};
+  }
+  return db.collection("donations")
+    .where("staffPhone", "==", phone)
+    .orderBy("submittedAt", "desc")
+    .onSnapshot(snap => {
+      const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      localStorage.setItem('trust_donations', JSON.stringify(data));
+      callback(data);
+    }, err => console.warn("fbListenMyDonations:", err.message));
+}
