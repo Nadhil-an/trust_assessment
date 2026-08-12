@@ -1002,6 +1002,7 @@
       </div>
       <div style="margin-top:12px; display:flex; gap:10px;">
         <button class="ad-btn ad-btn-outline ad-btn-sm" style="flex:1" onclick="editMembership('${m.id}')">✏️ Edit</button>
+        <button class="ad-btn ad-btn-outline ad-btn-sm" style="flex:1; color:#d32f2f; border-color:#d32f2f;" onclick="deleteTransaction('${m.id}', 'membership')">🗑️ Delete</button>
       </div>
     </div>`;
       });
@@ -1030,6 +1031,7 @@
       </div>
       <div style="margin-top:12px; display:flex; gap:10px;">
         <button class="ad-btn ad-btn-outline ad-btn-sm" style="flex:1" onclick="editDonation('${d.id}')">✏️ Edit</button>
+        <button class="ad-btn ad-btn-outline ad-btn-sm" style="flex:1; color:#d32f2f; border-color:#d32f2f;" onclick="deleteTransaction('${d.id}', 'donation')">🗑️ Delete</button>
       </div>
     </div>`;
       });
@@ -1376,17 +1378,24 @@
          `#d32f2f`,
          async () => {
            let success = false;
+           showAdToast("Deleting...", "info");
            if (type === 'membership') {
              success = await fbDeleteMembership(id);
+             if (success !== false) allMemberships = allMemberships.filter(m => m.id !== id);
            } else if (type === 'donation') {
              success = await fbDeleteDonation(id);
+             if (success !== false) allDonations = allDonations.filter(d => d.id !== id);
            }
            
-           if (success) {
+           if (success !== false) {
+              closeConfirmModal();
               showAdToast("Transaction deleted successfully", "success");
-              // The real-time listener will automatically re-render the Day Book!
+              // Update all views so amounts drop instantly
+              renderDashboardOverview();
+              renderReportsList();
+              renderDayBook();
            } else {
-              showAdToast("Failed to delete transaction", "error");
+              showAdToast("Failed to delete transaction. Check permissions.", "error");
            }
          }
        );
