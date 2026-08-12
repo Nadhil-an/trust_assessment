@@ -179,34 +179,42 @@ let photos = [];
 
 let editId = null;
 let voucherSettings = null;
+let originalStaff = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
+  const params = new URLSearchParams(window.location.search);
+  const adminBypass = params.get('admin') === 'true';
+  editId = params.get('editId');
+
   const user = getUser();
-  if (!user) { window.location.href = 'index.html'; return; }
+  if (!user && !adminBypass) { window.location.href = 'index.html'; return; }
+  
   applyTranslations();
   renderPhotoGrid();
   
   // Voucher Logic
-  voucherSettings = await fbGetVoucherSettings(user.phone);
-  if (voucherSettings) {
-    if (voucherSettings.currentPage > voucherSettings.endPage) {
-       document.querySelector('.btn-primary.btn-lg').disabled = true;
-       document.querySelector('.btn-primary.btn-lg').textContent = '🚫 Voucher Book Exhausted';
-       showToast('Voucher Book Exhausted. Please contact Admin.', 'error', 5000);
-    } else {
-       document.getElementById('donVoucher').value = voucherSettings.currentPage;
+  if (user) {
+    voucherSettings = await fbGetVoucherSettings(user.phone);
+    if (voucherSettings && !editId) {
+      if (voucherSettings.currentPage > voucherSettings.endPage) {
+         document.querySelector('.btn-primary.btn-lg').disabled = true;
+         document.querySelector('.btn-primary.btn-lg').textContent = '🚫 Voucher Book Exhausted';
+         showToast('Voucher Book Exhausted. Please contact Admin.', 'error', 5000);
+      } else {
+         document.getElementById('donVoucher').value = voucherSettings.currentPage;
+      }
     }
   }
 
   // Edit Mode Logic
-  const params = new URLSearchParams(window.location.search);
-  editId = params.get('editId');
   if (editId) {
     document.querySelector('.btn-primary.btn-lg').innerHTML = '💝 Update Donation';
     document.querySelector('.form-section-title').innerHTML = '🎫 Editing Voucher';
-    const all = await fbGetAllDonations();
-    const doc = all.find(d => d.id === editId);
+    showLoading('Loading donation data...');
+    const doc = await fbGetDonationById(editId);
+    hideLoading();
     if (doc) {
+      originalStaff = { name: doc.staffName, phone: doc.staffPhone, createdAt: doc.createdAt };
       document.getElementById('donVoucher').value = doc.voucherId || '';
       document.getElementById('donName').value = doc.donorName || '';
       document.getElementById('donPhone').value = doc.donorPhone || '';
@@ -223,6 +231,8 @@ document.addEventListener('DOMContentLoaded', async () => {
          photos = [...doc.photos];
          renderPhotoGrid();
       }
+    } else {
+      showToast('Donation record not found', 'error');
     }
   }
 });
@@ -310,7 +320,7 @@ async function submitDonation() {
   if (!amount || amount <= 0)  { showToast('Enter a valid donation amount', 'error'); return; }
 
   showLoading('Saving donation...');
-  const user = getUser();
+  const user = getUser() || { name: 'Admin Edit', phone: 'Admin' };
 
   let photoUrls = [];
   for (let i = 0; i < photos.length; i++) {
@@ -324,11 +334,14 @@ async function submitDonation() {
     } catch { photoUrls.push(photos[i]); }
   }
 
+  const sName = editId && originalStaff ? originalStaff.name : user.name;
+  const sPhone = editId && originalStaff ? originalStaff.phone : user.phone;
+
   const record = {
     type:          'donation',
     voucherId:     voucher,
-    staffName:     user.name,
-    staffPhone:    user.phone,
+    staffName:     sName,
+    staffPhone:    sPhone,
     donorName:     name,
     donorPhone:    phone,
     place:         place,
@@ -337,16 +350,16 @@ async function submitDonation() {
     amount:        amount,
     notes:         notes,
     photos:        photoUrls,
-    submittedAt:   new Date().toISOString(),
-    dateStr:       new Date().toISOString().split('T')[0],
   };
+  
+  if (!editId) {
+    record.submittedAt = new Date().toISOString();
+    record.dateStr = new Date().toISOString().split('T')[0];
+  }
 
   try { 
     if (editId) {
        await db.collection("donations").doc(editId).update(record);
-       showToast('Updated successfully', 'success');
-       setTimeout(() => window.close(), 1000);
-       return;
     } else {
        await fbSaveDonation(record); 
        // Increment voucher if we used the assigned one
@@ -356,7 +369,7 @@ async function submitDonation() {
     }
   } catch(e) { console.warn(e); }
 
-  if (!editId) {
+  if (!editId && user.phone !== 'Admin') {
     // Save locally
     const local = JSON.parse(localStorage.getItem('trust_donations') || '[]');
     local.unshift({ ...record, id: 'local_' + Date.now() });
@@ -366,6 +379,16 @@ async function submitDonation() {
   hideLoading();
   document.getElementById('successMsg').textContent = `₹${amount} donation from ${name} has been saved!`;
   document.getElementById('formWrap').style.display = 'none';
+  
+  if (editId && new URLSearchParams(window.location.search).get('admin') === 'true') {
+     document.getElementById('successScreen').innerHTML = `
+       <div class="success-icon">✅</div>
+       <h2 class="success-title">Updated Successfully!</h2>
+       <p class="success-msg" style="margin-bottom:20px">The donation record has been updated. You may close this tab.</p>
+       <button class="btn btn-primary btn-lg" onclick="window.close()" style="width:100%;max-width:320px;margin:0 auto">Close Window</button>
+     `;
+  }
+  
   document.getElementById('successScreen').classList.add('show');
 }
 </script>

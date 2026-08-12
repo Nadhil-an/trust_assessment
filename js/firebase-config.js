@@ -216,6 +216,20 @@ async function fbDeleteUser(phone) {
   }
 }
 
+async function fbGetMembershipById(id) {
+  if (!db) {
+    const local = JSON.parse(localStorage.getItem('trust_memberships') || '[]');
+    return local.find(m => m.id === id) || null;
+  }
+  try {
+    const doc = await db.collection("memberships").doc(id).get();
+    return doc.exists ? { id: doc.id, ...doc.data() } : null;
+  } catch(e) {
+    console.warn("fbGetMembershipById:", e.message);
+    return null;
+  }
+}
+
 function fbListenAllUsers(callback) {
   if (!db) { callback([]); return () => {}; }
   return db.collection("users")
@@ -319,6 +333,20 @@ async function fbDeleteDonation(id) {
   } catch (e) {
     console.warn("fbDeleteDonation:", e.message);
     return false;
+  }
+}
+
+async function fbGetDonationById(id) {
+  if (!db) {
+    const local = JSON.parse(localStorage.getItem('trust_donations') || '[]');
+    return local.find(d => d.id === id) || null;
+  }
+  try {
+    const doc = await db.collection("donations").doc(id).get();
+    return doc.exists ? { id: doc.id, ...doc.data() } : null;
+  } catch(e) {
+    console.warn("fbGetDonationById:", e.message);
+    return null;
   }
 }
 
