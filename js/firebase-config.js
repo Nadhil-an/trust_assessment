@@ -105,9 +105,10 @@ async function fbGetMyAssessments(phone) {
   try {
     const snap = await db.collection("assessments")
       .where("staffPhone", "==", phone)
-      .orderBy("submittedAt", "desc")
       .get();
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    return snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => new Date(b.submittedAt||0) - new Date(a.submittedAt||0));
   } catch (e) {
     console.warn("fbGetMyAssessments:", e.message);
     return JSON.parse(localStorage.getItem('trust_my_reports') || '[]');
@@ -136,9 +137,11 @@ function fbListenAllAssessments(callback) {
     return () => {};
   }
   return db.collection("assessments")
-    .orderBy("submittedAt", "desc")
     .onSnapshot(snap => {
-      callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      const data = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => new Date(b.submittedAt||0) - new Date(a.submittedAt||0));
+      callback(data);
     }, err => console.warn("fbListenAllAssessments:", err.message));
 }
 
@@ -281,16 +284,20 @@ async function fbDeleteMembership(id) {
 async function fbGetMyMemberships(phone) {
   if (!db) return JSON.parse(localStorage.getItem('trust_memberships') || '[]');
   try {
-    const snap = await db.collection("memberships").where("staffPhone","==",phone).orderBy("submittedAt","desc").get();
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const snap = await db.collection("memberships").where("staffPhone","==",phone).get();
+    return snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => new Date(b.submittedAt||0) - new Date(a.submittedAt||0));
   } catch(e) { return JSON.parse(localStorage.getItem('trust_memberships') || '[]'); }
 }
 
 async function fbGetAllMemberships() {
   if (!db) return JSON.parse(localStorage.getItem('trust_memberships') || '[]');
   try {
-    const snap = await db.collection("memberships").orderBy("submittedAt","desc").get();
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const snap = await db.collection("memberships").get();
+    return snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => new Date(b.submittedAt||0) - new Date(a.submittedAt||0));
   } catch(e) { return JSON.parse(localStorage.getItem('trust_memberships') || '[]'); }
 }
 
@@ -300,9 +307,11 @@ function fbListenAllMemberships(callback) {
     return () => {};
   }
   return db.collection("memberships")
-    .orderBy("submittedAt", "desc")
     .onSnapshot(snap => {
-      callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      const data = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => new Date(b.submittedAt||0) - new Date(a.submittedAt||0));
+      callback(data);
     }, err => console.warn("fbListenAllMemberships:", err.message));
 }
 
@@ -353,16 +362,20 @@ async function fbGetDonationById(id) {
 async function fbGetMyDonations(phone) {
   if (!db) return JSON.parse(localStorage.getItem('trust_donations') || '[]');
   try {
-    const snap = await db.collection("donations").where("staffPhone","==",phone).orderBy("submittedAt","desc").get();
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const snap = await db.collection("donations").where("staffPhone","==",phone).get();
+    return snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => new Date(b.submittedAt||0) - new Date(a.submittedAt||0));
   } catch(e) { return JSON.parse(localStorage.getItem('trust_donations') || '[]'); }
 }
 
 async function fbGetAllDonations() {
   if (!db) return JSON.parse(localStorage.getItem('trust_donations') || '[]');
   try {
-    const snap = await db.collection("donations").orderBy("submittedAt","desc").get();
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const snap = await db.collection("donations").get();
+    return snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => new Date(b.submittedAt||0) - new Date(a.submittedAt||0));
   } catch(e) { return JSON.parse(localStorage.getItem('trust_donations') || '[]'); }
 }
 
@@ -372,9 +385,11 @@ function fbListenAllDonations(callback) {
     return () => {};
   }
   return db.collection("donations")
-    .orderBy("submittedAt", "desc")
     .onSnapshot(snap => {
-      callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      const data = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => new Date(b.submittedAt||0) - new Date(a.submittedAt||0));
+      callback(data);
     }, err => console.warn("fbListenAllDonations:", err.message));
 }
 
@@ -449,17 +464,35 @@ async function fbIncrementVoucher(phone) {
 
 function fbListenMyAssessments(phone, callback) {
   if (!db) {
-    callback(JSON.parse(localStorage.getItem('trust_reports') || '[]'));
+    callback(JSON.parse(localStorage.getItem('trust_my_reports') || '[]'));
     return () => {};
   }
   return db.collection("assessments")
     .where("staffPhone", "==", phone)
-    .orderBy("submittedAt", "desc")
     .onSnapshot(snap => {
-      const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      localStorage.setItem('trust_reports', JSON.stringify(data));
+      const data = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => {
+          const ta = a.submittedAt ? new Date(a.submittedAt).getTime() : 0;
+          const tb = b.submittedAt ? new Date(b.submittedAt).getTime() : 0;
+          return tb - ta;
+        });
+      localStorage.setItem('trust_my_reports', JSON.stringify(data));
       callback(data);
-    }, err => console.warn("fbListenMyAssessments:", err.message));
+    }, err => {
+      console.warn("fbListenMyAssessments error:", err.message, err.code);
+      // Fallback: fetch without ordering
+      db.collection("assessments")
+        .where("staffPhone", "==", phone)
+        .get()
+        .then(snap => {
+          const data = snap.docs
+            .map(d => ({ id: d.id, ...d.data() }))
+            .sort((a, b) => new Date(b.submittedAt||0) - new Date(a.submittedAt||0));
+          callback(data);
+        })
+        .catch(() => callback(JSON.parse(localStorage.getItem('trust_my_reports') || '[]')));
+    });
 }
 
 function fbListenMyMemberships(phone, callback) {
@@ -469,12 +502,29 @@ function fbListenMyMemberships(phone, callback) {
   }
   return db.collection("memberships")
     .where("staffPhone", "==", phone)
-    .orderBy("submittedAt", "desc")
     .onSnapshot(snap => {
-      const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const data = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => {
+          const ta = a.submittedAt ? new Date(a.submittedAt).getTime() : 0;
+          const tb = b.submittedAt ? new Date(b.submittedAt).getTime() : 0;
+          return tb - ta;
+        });
       localStorage.setItem('trust_memberships', JSON.stringify(data));
       callback(data);
-    }, err => console.warn("fbListenMyMemberships:", err.message));
+    }, err => {
+      console.warn("fbListenMyMemberships error:", err.message, err.code);
+      db.collection("memberships")
+        .where("staffPhone", "==", phone)
+        .get()
+        .then(snap => {
+          const data = snap.docs
+            .map(d => ({ id: d.id, ...d.data() }))
+            .sort((a, b) => new Date(b.submittedAt||0) - new Date(a.submittedAt||0));
+          callback(data);
+        })
+        .catch(() => callback(JSON.parse(localStorage.getItem('trust_memberships') || '[]')));
+    });
 }
 
 function fbListenMyDonations(phone, callback) {
@@ -484,10 +534,27 @@ function fbListenMyDonations(phone, callback) {
   }
   return db.collection("donations")
     .where("staffPhone", "==", phone)
-    .orderBy("submittedAt", "desc")
     .onSnapshot(snap => {
-      const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const data = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => {
+          const ta = a.submittedAt ? new Date(a.submittedAt).getTime() : 0;
+          const tb = b.submittedAt ? new Date(b.submittedAt).getTime() : 0;
+          return tb - ta;
+        });
       localStorage.setItem('trust_donations', JSON.stringify(data));
       callback(data);
-    }, err => console.warn("fbListenMyDonations:", err.message));
+    }, err => {
+      console.warn("fbListenMyDonations error:", err.message, err.code);
+      db.collection("donations")
+        .where("staffPhone", "==", phone)
+        .get()
+        .then(snap => {
+          const data = snap.docs
+            .map(d => ({ id: d.id, ...d.data() }))
+            .sort((a, b) => new Date(b.submittedAt||0) - new Date(a.submittedAt||0));
+          callback(data);
+        })
+        .catch(() => callback(JSON.parse(localStorage.getItem('trust_donations') || '[]')));
+    });
 }

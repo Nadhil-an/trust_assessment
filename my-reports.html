@@ -187,7 +187,12 @@ function clearDateFilter() {
 function getFilteredData(dataArray) {
   const dateStr = document.getElementById('reportDateFilter').value;
   if (!dateStr) return dataArray;
-  return dataArray.filter(r => r.dateStr === dateStr || (r.submittedAt && r.submittedAt.startsWith(dateStr)) || (r.localDate && r.localDate.startsWith(dateStr)));
+  return dataArray.filter(r => {
+    // Convert Firestore Timestamp to string if needed
+    const submitted = r.submittedAt?.toDate ? r.submittedAt.toDate().toISOString() : (r.submittedAt || '');
+    const local = r.localDate?.toDate ? r.localDate.toDate().toISOString() : (r.localDate || '');
+    return r.dateStr === dateStr || submitted.startsWith(dateStr) || local.startsWith(dateStr);
+  });
 }
 
 function renderCurrentTab() {
@@ -243,7 +248,7 @@ function renderReports() {
   filteredReports.forEach((r, idx) => {
     const card = document.createElement('div');
     card.className = 'report-card';
-    const dt = r.submittedAt || r.localDate || '';
+    const dt = r.submittedAt?.toDate ? r.submittedAt.toDate().toISOString() : (r.submittedAt || r.localDate || '');
     const cats = (r.categories || []).slice(0,4);
     const more = (r.categories || []).length - 4;
     let chips = cats.map(c => `<span class="chip">${c.icon} ${c.label}</span>`).join('');
@@ -321,7 +326,7 @@ function renderMemberships() {
         <span class="record-chip chip-${m.paymentMethod}">${m.paymentMethod === 'gpay' ? '<img src="gpay.png" alt="GPay" style="height:10px;vertical-align:middle;margin-right:2px"> GPay' : '💵 Cash'}</span>
         <span class="record-chip chip-${m.paymentStatus}">${m.paymentStatus === 'paid' ? '✅ Paid' : '⏳ Pending'}</span>
         <span class="record-chip chip-${m.interestLevel}">⭐ ${m.interestLevel?.charAt(0).toUpperCase() + m.interestLevel?.slice(1)} Interest</span>
-        <span style="margin-left:auto;font-size:0.72rem;color:var(--text-mid)">${formatDate(m.submittedAt)}</span>
+        <span style="margin-left:auto;font-size:0.72rem;color:var(--text-mid)">${formatDate(m.submittedAt?.toDate ? m.submittedAt.toDate().toISOString() : m.submittedAt)}</span>
       </div>
       <div style="margin-top:12px; display:flex; gap:10px;">
         <button class="btn btn-outline" style="flex:1; padding:6px; font-size:0.8rem; min-height:32px" onclick="editMembership('${m.id}')">✏️ Edit</button>
@@ -377,7 +382,7 @@ function renderDonations() {
       <div class="record-meta">
         <span class="record-chip chip-${d.paymentMethod}">${d.paymentMethod === 'gpay' ? '<img src="gpay.png" alt="GPay" style="height:10px;vertical-align:middle;margin-right:2px"> GPay' : '💵 Cash'}</span>
         <span class="record-chip chip-${d.interestLevel}">⭐ ${d.interestLevel?.charAt(0).toUpperCase() + d.interestLevel?.slice(1)} Interest</span>
-        <span style="margin-left:auto;font-size:0.72rem;color:var(--text-mid)">${formatDate(d.submittedAt)}</span>
+        <span style="margin-left:auto;font-size:0.72rem;color:var(--text-mid)">${formatDate(d.submittedAt?.toDate ? d.submittedAt.toDate().toISOString() : d.submittedAt)}</span>
       </div>
       <div style="margin-top:12px; display:flex; gap:10px;">
         <button class="btn btn-outline" style="flex:1; padding:6px; font-size:0.8rem; min-height:32px" onclick="editDonation('${d.id}')">✏️ Edit</button>
