@@ -137,6 +137,18 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+<!-- ══════════ CUSTOM CONFIRM MODAL ══════════ -->
+<div class="modal-bg" id="confirmModal" style="z-index: 10000;">
+  <div class="modal-box" style="padding: 24px; text-align: left;">
+    <h3 style="font-size:1.25rem;font-weight:800;margin-bottom:8px" id="confirmTitle">Confirm Action</h3>
+    <p style="font-size:0.95rem;color:var(--text-mid);margin-bottom:24px;line-height:1.5" id="confirmMessage"></p>
+    <div style="display:flex;gap:12px;justify-content:flex-end">
+      <button class="btn btn-outline" style="min-height:44px;padding:0 20px;flex:1" onclick="closeConfirmModal()">Cancel</button>
+      <button class="btn btn-primary" id="confirmActionBtn" style="min-height:44px;padding:0 20px;flex:1">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <script src="js/i18n.js"></script>
 <script src="js/firebase-config.js"></script>
 <script src="js/app.js"></script>
@@ -306,8 +318,8 @@ function renderMemberships() {
         <span class="finance-label">Total Collected</span>
         <span class="finance-val">₹${totalAmt.toLocaleString('en-IN')}</span>
       </div>
-      <div class="finance-sub"><img src="gpay.png" alt="GPay" style="height:12px;vertical-align:middle;margin-right:2px"> GPay: ₹${gpayAmt.toLocaleString('en-IN')} &nbsp;&nbsp; 💵 Cash: ₹${cashAmt.toLocaleString('en-IN')}</div>
-      <div class="finance-sub" style="margin-top:4px">Total: ${filteredMemberships.length} | Paid: ${paid.length} | Pending: ${filteredMemberships.length - paid.length}</div>
+      <div class="finance-sub"><img src="gpay.png" alt="GPay" style="height:12px;display:inline-block;vertical-align:middle;margin-right:2px"> GPay: ₹${gpayAmt.toLocaleString('en-IN')} &nbsp;&nbsp; 💵 Cash: ₹${cashAmt.toLocaleString('en-IN')}</div>
+      <div class="finance-sub" style="margin-top:4px">Total records: ${filteredMemberships.length} | Paid: ${paid.length} | Pending: ${filteredMemberships.length - paid.length}</div>
     </div>`;
 
   container.innerHTML = '';
@@ -323,7 +335,7 @@ function renderMemberships() {
         <div class="record-amount">${m.paymentStatus === 'paid' ? '₹100' : '<span style="color:#F9A825">Pending</span>'}</div>
       </div>
       <div class="record-meta">
-        <span class="record-chip chip-${m.paymentMethod}">${m.paymentMethod === 'gpay' ? '<img src="gpay.png" alt="GPay" style="height:10px;vertical-align:middle;margin-right:2px"> GPay' : '💵 Cash'}</span>
+        <span class="record-chip chip-${m.paymentMethod}">${m.paymentMethod === 'gpay' ? '<img src="gpay.png" alt="GPay" style="height:10px;display:inline-block;vertical-align:middle;margin-right:2px"> GPay' : '💵 Cash'}</span>
         <span class="record-chip chip-${m.paymentStatus}">${m.paymentStatus === 'paid' ? '✅ Paid' : '⏳ Pending'}</span>
         <span class="record-chip chip-${m.interestLevel}">⭐ ${m.interestLevel?.charAt(0).toUpperCase() + m.interestLevel?.slice(1)} Interest</span>
         <span style="margin-left:auto;font-size:0.72rem;color:var(--text-mid)">${formatDate(m.submittedAt?.toDate ? m.submittedAt.toDate().toISOString() : m.submittedAt)}</span>
@@ -363,7 +375,7 @@ function renderDonations() {
         <span class="finance-label">Total Collected</span>
         <span class="finance-val">₹${totalAmt.toLocaleString('en-IN')}</span>
       </div>
-      <div class="finance-sub"><img src="gpay.png" alt="GPay" style="height:12px;vertical-align:middle;margin-right:2px"> GPay: ₹${gpayAmt.toLocaleString('en-IN')} &nbsp;&nbsp; 💵 Cash: ₹${cashAmt.toLocaleString('en-IN')}</div>
+      <div class="finance-sub"><img src="gpay.png" alt="GPay" style="height:12px;display:inline-block;vertical-align:middle;margin-right:2px"> GPay: ₹${gpayAmt.toLocaleString('en-IN')} &nbsp;&nbsp; 💵 Cash: ₹${cashAmt.toLocaleString('en-IN')}</div>
       <div class="finance-sub" style="margin-top:4px">Total records: ${filteredDonations.length}</div>
     </div>`;
 
@@ -380,7 +392,7 @@ function renderDonations() {
         <div class="record-amount">₹${(d.amount||0).toLocaleString('en-IN')}</div>
       </div>
       <div class="record-meta">
-        <span class="record-chip chip-${d.paymentMethod}">${d.paymentMethod === 'gpay' ? '<img src="gpay.png" alt="GPay" style="height:10px;vertical-align:middle;margin-right:2px"> GPay' : '💵 Cash'}</span>
+        <span class="record-chip chip-${d.paymentMethod}">${d.paymentMethod === 'gpay' ? '<img src="gpay.png" alt="GPay" style="height:10px;display:inline-block;vertical-align:middle;margin-right:2px"> GPay' : '💵 Cash'}</span>
         <span class="record-chip chip-${d.interestLevel}">⭐ ${d.interestLevel?.charAt(0).toUpperCase() + d.interestLevel?.slice(1)} Interest</span>
         <span style="margin-left:auto;font-size:0.72rem;color:var(--text-mid)">${formatDate(d.submittedAt?.toDate ? d.submittedAt.toDate().toISOString() : d.submittedAt)}</span>
       </div>
@@ -467,25 +479,24 @@ function onLangChange() { renderCurrentTab(); }
 function editAssessment(id) {
   window.open(`form.html?editId=${id}`, '_blank');
 }
-async function deleteAssessment(id) {
-  if (confirm("Are you sure you want to delete this assessment?")) {
+function deleteAssessment(id) {
+  openConfirmModal('Delete Assessment', 'Are you sure you want to delete this assessment?', '🗑️ Delete', 'var(--danger)', async () => {
     showLoading();
     const success = await fbDeleteAssessment(id);
     hideLoading();
     if (success !== false) {
       showToast('Assessment deleted', 'success');
-      // The real-time listener will auto-update the list
     } else {
       showToast('Failed to delete assessment. Check permissions.', 'error');
     }
-  }
+  });
 }
 
 function editMembership(id) {
   window.open(`membership.html?editId=${id}`, '_blank');
 }
-async function deleteMembership(id) {
-  if (confirm("Are you sure you want to delete this membership?")) {
+function deleteMembership(id) {
+  openConfirmModal('Delete Membership', 'Are you sure you want to delete this membership?', '🗑️ Delete', 'var(--danger)', async () => {
     showLoading();
     const success = await fbDeleteMembership(id);
     hideLoading();
@@ -494,14 +505,14 @@ async function deleteMembership(id) {
     } else {
       showToast('Failed to delete membership. Check permissions.', 'error');
     }
-  }
+  });
 }
 
 function editDonation(id) {
   window.open(`donation.html?editId=${id}`, '_blank');
 }
-async function deleteDonation(id) {
-  if (confirm("Are you sure you want to delete this donation?")) {
+function deleteDonation(id) {
+  openConfirmModal('Delete Donation', 'Are you sure you want to delete this donation?', '🗑️ Delete', 'var(--danger)', async () => {
     showLoading();
     const success = await fbDeleteDonation(id);
     hideLoading();
@@ -510,7 +521,28 @@ async function deleteDonation(id) {
     } else {
       showToast('Failed to delete donation. Check permissions.', 'error');
     }
-  }
+  });
+}
+
+/* ─── Custom Confirm Modal Logic ─── */
+let confirmCallback = null;
+function openConfirmModal(title, message, btnText, btnColor, onConfirm) {
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMessage').innerHTML = message;
+  const actionBtn = document.getElementById('confirmActionBtn');
+  actionBtn.innerHTML = btnText;
+  if (btnColor) actionBtn.style.background = btnColor;
+  else actionBtn.style.background = '';
+  const newActionBtn = actionBtn.cloneNode(true);
+  actionBtn.parentNode.replaceChild(newActionBtn, actionBtn);
+  newActionBtn.addEventListener('click', () => {
+    if (onConfirm) onConfirm();
+    closeConfirmModal();
+  });
+  document.getElementById('confirmModal').classList.add('show');
+}
+function closeConfirmModal() {
+  document.getElementById('confirmModal').classList.remove('show');
 }
 </script>
 </body>
