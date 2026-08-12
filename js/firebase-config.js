@@ -369,3 +369,52 @@ async function uploadPhoto(base64DataUrl, filename) {
     return base64DataUrl; // Fallback to base64
   }
 }
+
+/* ─── Voucher Helpers ────────────────────────────────────────── */
+async function fbGetVoucherSettings(phone) {
+  if (!db) {
+    return JSON.parse(localStorage.getItem(`trust_voucher_${phone}`)) || null;
+  }
+  try {
+    const doc = await db.collection("voucher_settings").doc(phone).get();
+    if (doc.exists) return doc.data();
+    return null;
+  } catch(e) {
+    console.warn("fbGetVoucherSettings:", e.message);
+    return JSON.parse(localStorage.getItem(`trust_voucher_${phone}`)) || null;
+  }
+}
+
+async function fbUpdateVoucherSettings(phone, data) {
+  if (!db) {
+    localStorage.setItem(`trust_voucher_${phone}`, JSON.stringify(data));
+    return true;
+  }
+  try {
+    await db.collection("voucher_settings").doc(phone).set(data, { merge: true });
+    return true;
+  } catch(e) {
+    console.warn("fbUpdateVoucherSettings:", e.message);
+    return false;
+  }
+}
+
+async function fbIncrementVoucher(phone) {
+  if (!db) {
+    const local = JSON.parse(localStorage.getItem(`trust_voucher_${phone}`));
+    if (local && local.currentPage) {
+      local.currentPage = parseInt(local.currentPage) + 1;
+      localStorage.setItem(`trust_voucher_${phone}`, JSON.stringify(local));
+    }
+    return true;
+  }
+  try {
+    await db.collection("voucher_settings").doc(phone).update({
+      currentPage: firebase.firestore.FieldValue.increment(1)
+    });
+    return true;
+  } catch(e) {
+    console.warn("fbIncrementVoucher:", e.message);
+    return false;
+  }
+}

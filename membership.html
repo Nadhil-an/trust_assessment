@@ -187,11 +187,50 @@ let selectedPayMethod = 'gpay';
 let selectedInterest  = 'medium';
 let photos = [];
 
-document.addEventListener('DOMContentLoaded', () => {
+let editId = null;
+let voucherSettings = null;
+
+document.addEventListener('DOMContentLoaded', async () => {
   const user = getUser();
   if (!user) { window.location.href = 'index.html'; return; }
   applyTranslations();
   renderPhotoGrid();
+  
+  // Voucher Logic
+  voucherSettings = await fbGetVoucherSettings(user.phone);
+  if (voucherSettings) {
+    if (voucherSettings.currentPage > voucherSettings.endPage) {
+       document.querySelector('.btn-primary.btn-lg').disabled = true;
+       document.querySelector('.btn-primary.btn-lg').textContent = '🚫 Voucher Book Exhausted';
+       showToast('Voucher Book Exhausted. Please contact Admin.', 'error', 5000);
+    } else {
+       document.getElementById('memVoucher').value = voucherSettings.currentPage;
+    }
+  }
+
+  // Edit Mode Logic
+  const params = new URLSearchParams(window.location.search);
+  editId = params.get('editId');
+  if (editId) {
+    document.querySelector('.btn-primary.btn-lg').innerHTML = '✅ Update Membership';
+    document.querySelector('.form-section-title').innerHTML = '🎫 Editing Voucher';
+    const all = await fbGetAllMemberships();
+    const doc = all.find(m => m.id === editId);
+    if (doc) {
+      document.getElementById('memVoucher').value = doc.voucherId || '';
+      document.getElementById('memName').value = doc.memberName || '';
+      document.getElementById('memPhone').value = doc.memberPhone || '';
+      document.getElementById('memPlace').value = doc.place || '';
+      document.getElementById('memNotes').value = doc.notes || '';
+      if (doc.paymentStatus) setStatus(doc.paymentStatus, document.querySelector(`.status-btn.${doc.paymentStatus}`));
+      if (doc.paymentMethod) setPayMethod(doc.paymentMethod, document.querySelector(`.pay-method-btn[onclick*="${doc.paymentMethod}"]`));
+      if (doc.interestLevel) setInterest(doc.interestLevel, document.querySelector(`.interest-btn.${doc.interestLevel}`));
+      if (doc.photos && doc.photos.length) {
+         photos = [...doc.photos];
+         renderPhotoGrid();
+      }
+    }
+  }
 });
 
 function renderPhotoGrid() {
@@ -232,18 +271,21 @@ function removePhoto(idx) {
 }
 
 function setStatus(val, btn) {
+  if(!btn) return;
   selectedStatus = val;
   document.querySelectorAll('#statusRow .status-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }
 
 function setPayMethod(val, btn) {
+  if(!btn) return;
   selectedPayMethod = val;
   document.querySelectorAll('#payMethodRow .pay-method-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }
 
 function setInterest(val, btn) {
+  if(!btn) return;
   selectedInterest = val;
   document.querySelectorAll('#interestRow .interest-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
@@ -266,8 +308,12 @@ async function submitMembership() {
   let photoUrls = [];
   for (let i = 0; i < photos.length; i++) {
     try {
-      const url = await uploadPhoto(photos[i], `mem_${Date.now()}_${i}.jpg`);
-      photoUrls.push(url);
+      if (photos[i].startsWith('http')) {
+        photoUrls.push(photos[i]);
+      } else {
+        const url = await uploadPhoto(photos[i], `mem_${Date.now()}_${i}.jpg`);
+        photoUrls.push(url);
+      }
     } catch { photoUrls.push(photos[i]); }
   }
 
@@ -289,12 +335,26 @@ async function submitMembership() {
     dateStr:      new Date().toISOString().split('T')[0],
   };
 
-  try { await fbSaveMembership(record); } catch(e) { console.warn(e); }
+  try { 
+    if (editId) {
+       await db.collection("memberships").doc(editId).update(record);
+       showToast('Updated successfully', 'success');
+       setTimeout(() => window.close(), 1000);
+       return;
+    } else {
+       await fbSaveMembership(record); 
+       if (voucherSettings && parseInt(voucher) == voucherSettings.currentPage) {
+         await fbIncrementVoucher(user.phone);
+       }
+    }
+  } catch(e) { console.warn(e); }
 
-  // Save locally
-  const local = JSON.parse(localStorage.getItem('trust_memberships') || '[]');
-  local.unshift({ ...record, id: 'local_' + Date.now() });
-  localStorage.setItem('trust_memberships', JSON.stringify(local.slice(0, 500)));
+  if (!editId) {
+    // Save locally
+    const local = JSON.parse(localStorage.getItem('trust_memberships') || '[]');
+    local.unshift({ ...record, id: 'local_' + Date.now() });
+    localStorage.setItem('trust_memberships', JSON.stringify(local.slice(0, 500)));
+  }
 
   hideLoading();
   document.getElementById('formWrap').style.display = 'none';

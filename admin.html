@@ -436,6 +436,38 @@
     </div>
   </div>
 
+  <!-- ══════════ VOUCHER SETTINGS MODAL ══════════ -->
+  <div class="ad-modal-bg" id="voucherModal" style="z-index: 9999;">
+    <div class="ad-modal" style="max-width: 400px;">
+      <div class="ad-modal-header">
+        <div class="ad-modal-title">Voucher Settings</div>
+        <button class="ad-close" onclick="closeVoucherModal()">✕</button>
+      </div>
+      <div class="ad-modal-body">
+        <div style="margin-bottom:12px; font-weight:700;" id="voucherModalName"></div>
+        <input type="hidden" id="vouchPhone">
+        
+        <div class="ad-form-group" style="margin-bottom:12px;">
+          <label style="display:block;margin-bottom:6px;font-size:0.85rem;color:var(--ad-muted)">Start Page</label>
+          <input type="number" id="vouchStart" style="width:100%;padding:10px;border-radius:6px;border:1px solid var(--ad-border)">
+        </div>
+        
+        <div class="ad-form-group" style="margin-bottom:12px;">
+          <label style="display:block;margin-bottom:6px;font-size:0.85rem;color:var(--ad-muted)">End Page</label>
+          <input type="number" id="vouchEnd" style="width:100%;padding:10px;border-radius:6px;border:1px solid var(--ad-border)">
+        </div>
+        
+        <div class="ad-form-group" style="margin-bottom:20px;">
+          <label style="display:block;margin-bottom:6px;font-size:0.85rem;color:var(--ad-muted)">Current Page</label>
+          <input type="number" id="vouchCurrent" style="width:100%;padding:10px;border-radius:6px;border:1px solid var(--ad-border)">
+        </div>
+
+        <button class="ad-btn" style="width:100%;justify-content:center" onclick="saveVoucherSettings(this)">💾 Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+
   <!-- Firebase + Scripts -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
@@ -959,6 +991,9 @@
         <span class="rca-chip" style="background:rgba(76,175,132,0.1);color:var(--ad-green)">${m.paymentStatus === 'paid' ? '✅ Paid' : '⏳ Pending'}</span>
         <span class="rca-chip" style="background:rgba(255,160,0,0.1);color:#FFC107">⭐ ${m.interestLevel?.toUpperCase() || 'UNKNOWN'}</span>
       </div>
+      <div style="margin-top:12px; display:flex; gap:10px;">
+        <button class="ad-btn ad-btn-outline ad-btn-sm" style="flex:1" onclick="editMembership('${m.id}')">✏️ Edit</button>
+      </div>
     </div>`;
       });
       html += `</div>`;
@@ -983,6 +1018,9 @@
       <div class="rca-chips">
         <span class="rca-chip" style="background:rgba(255,255,255,0.05);border:1px solid var(--ad-border);color:var(--ad-text)">${d.paymentMethod === 'gpay' ? '<img src="gpay.png" style="height:10px;margin-right:2px">GPay' : '💵 Cash'}</span>
         <span class="rca-chip" style="background:rgba(255,160,0,0.1);color:#FFC107">⭐ ${d.interestLevel?.toUpperCase() || 'UNKNOWN'}</span>
+      </div>
+      <div style="margin-top:12px; display:flex; gap:10px;">
+        <button class="ad-btn ad-btn-outline ad-btn-sm" style="flex:1" onclick="editDonation('${d.id}')">✏️ Edit</button>
       </div>
     </div>`;
       });
@@ -1025,6 +1063,11 @@
             <div class="ad-chip" style="background:rgba(76,175,132,0.15);color:var(--ad-green)">
               📋 ${assessCount} report${assessCount !== 1 ? 's' : ''}
             </div>
+            <button 
+              class="ad-btn ad-btn-outline" 
+              style="padding:6px 14px;font-size:0.8rem;margin-bottom:4px"
+              onclick="openVoucherSettings('${u.phone || u.id}', '${(u.name || 'this volunteer').replace(/'/g,"\\'")}')"
+            >🎫 Voucher Settings</button>
             <button 
               class="ad-btn" 
               style="background:#d32f2f;color:white;border:none;padding:6px 14px;font-size:0.8rem"
@@ -1202,9 +1245,6 @@
               ${typeBadge}
               ${payBadge}
               <span style="font-weight:800;font-size:1.1rem;color:${color}">₹${(Number(txn.amount)||0).toLocaleString('en-IN')}</span>
-              <button class="ad-btn ad-btn-outline" style="min-height:32px;padding:0 8px;border-color:#ef5350;color:#ef5350" title="Delete Transaction" onclick="deleteTransaction('${txn.id}', '${txn._type}')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-              </button>
             </div>
           </div>`;
         });
@@ -1387,12 +1427,79 @@
       document.getElementById('confirmModal').classList.remove('show');
     }
 
+    /* ─── Voucher Settings Modal Logic ─── */
+    async function openVoucherSettings(phone, name) {
+      document.getElementById('voucherModalName').textContent = `Staff: ${name}`;
+      document.getElementById('vouchPhone').value = phone;
+      
+      const vStart = document.getElementById('vouchStart');
+      const vEnd = document.getElementById('vouchEnd');
+      const vCurr = document.getElementById('vouchCurrent');
+      
+      vStart.value = ''; vEnd.value = ''; vCurr.value = '';
+      
+      // Fetch existing if any
+      const existing = await fbGetVoucherSettings(phone);
+      if (existing) {
+        vStart.value = existing.startPage || '';
+        vEnd.value = existing.endPage || '';
+        vCurr.value = existing.currentPage || '';
+      }
+      
+      document.getElementById('voucherModal').classList.add('show');
+    }
+
+    async function saveVoucherSettings(btn) {
+      const phone = document.getElementById('vouchPhone').value;
+      const startPage = parseInt(document.getElementById('vouchStart').value) || 0;
+      const endPage = parseInt(document.getElementById('vouchEnd').value) || 0;
+      const currentPage = parseInt(document.getElementById('vouchCurrent').value) || 0;
+      
+      if (!phone || startPage <= 0 || endPage < startPage || currentPage < startPage) {
+        showAdToast('Please enter valid page numbers', 'error');
+        return;
+      }
+      
+      const originalText = btn.innerHTML;
+      btn.innerHTML = `<div class="ad-spinner" style="width:16px;height:16px;border-width:2px;display:inline-block"></div>`;
+      btn.disabled = true;
+      
+      const success = await fbUpdateVoucherSettings(phone, {
+        startPage, endPage, currentPage
+      });
+      
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+      
+      if (success) {
+        showAdToast('Voucher settings saved!', 'success');
+        closeVoucherModal();
+      } else {
+        showAdToast('Failed to save voucher settings', 'error');
+      }
+    }
+
+    function closeVoucherModal() {
+      document.getElementById('voucherModal').classList.remove('show');
+    }
+    
+    function editMembership(id) {
+       window.open(`membership.html?editId=${id}&admin=true`, '_blank');
+    }
+    
+    function editDonation(id) {
+       window.open(`donation.html?editId=${id}&admin=true`, '_blank');
+    }
+
     /* close modals on backdrop click */
     document.getElementById('reportModal').addEventListener('click', function (e) {
       if (e.target === this) closeModal();
     });
     document.getElementById('confirmModal').addEventListener('click', function (e) {
       if (e.target === this) closeConfirmModal();
+    });
+    document.getElementById('voucherModal').addEventListener('click', function (e) {
+      if (e.target === this) closeVoucherModal();
     });
   </script>
 </body>
