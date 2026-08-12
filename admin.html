@@ -1068,15 +1068,15 @@
           </div>
           
           <!-- Bottom: Action Buttons -->
-          <div style="display:flex; gap:10px; margin-top:4px;">
+          <div style="display:flex; gap:10px; margin-top:4px; width:100%;">
             <button 
               class="ad-btn ad-btn-outline" 
-              style="flex:1; padding:8px; font-size:0.85rem; justify-content:center; min-height:36px;"
+              style="flex: 1 1 50%; width: 50%; padding:8px; font-size:0.85rem; justify-content:center; min-height:36px;"
               onclick="openVoucherSettings('${u.phone || u.id}', '${(u.name || 'this volunteer').replace(/'/g,"\\'")}')"
             >🎫 Voucher Settings</button>
             <button 
               class="ad-btn" 
-              style="flex:1; background:#d32f2f; color:white; border:none; padding:8px; font-size:0.85rem; justify-content:center; min-height:36px;"
+              style="flex: 1 1 50%; width: 50%; background:#d32f2f; color:white; border:none; padding:8px; font-size:0.85rem; justify-content:center; min-height:36px;"
               onclick="deleteVolunteer('${u.phone || u.id}', '${(u.name || 'this volunteer').replace(/'/g,"\\'")}', event)"
             >🚫 Remove</button>
           </div>
