@@ -253,6 +253,10 @@ function renderReports() {
         <div class="chip-row">${chips}</div>
         ${r.photos && r.photos.length ? `<div style="font-size:0.8rem;color:var(--text-mid);margin-top:6px">📷 ${r.photos.length} photo(s)</div>` : ''}
         ${r.locationAddress ? `<div style="font-size:0.75rem;color:var(--text-mid);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📍 ${r.locationAddress}</div>` : ''}
+      </div>
+      <div style="margin-top:12px; display:flex; gap:10px;" onclick="event.stopPropagation()">
+        <button class="btn btn-outline" style="flex:1; padding:6px; font-size:0.8rem; min-height:32px" onclick="editAssessment('${r.id}')">✏️ Edit</button>
+        <button class="btn btn-outline" style="flex:1; padding:6px; font-size:0.8rem; min-height:32px; color:#d32f2f; border-color:#d32f2f" onclick="deleteAssessment('${r.id}')">🗑️ Delete</button>
       </div>`;
     // Find original index for modal
     const originalIdx = allReports.indexOf(r);
@@ -310,6 +314,10 @@ function renderMemberships() {
         <span class="record-chip chip-${m.paymentStatus}">${m.paymentStatus === 'paid' ? '✅ Paid' : '⏳ Pending'}</span>
         <span class="record-chip chip-${m.interestLevel}">⭐ ${m.interestLevel?.charAt(0).toUpperCase() + m.interestLevel?.slice(1)} Interest</span>
         <span style="margin-left:auto;font-size:0.72rem;color:var(--text-mid)">${formatDate(m.submittedAt)}</span>
+      </div>
+      <div style="margin-top:12px; display:flex; gap:10px;">
+        <button class="btn btn-outline" style="flex:1; padding:6px; font-size:0.8rem; min-height:32px" onclick="editMembership('${m.id}')">✏️ Edit</button>
+        <button class="btn btn-outline" style="flex:1; padding:6px; font-size:0.8rem; min-height:32px; color:#d32f2f; border-color:#d32f2f" onclick="deleteMembership('${m.id}')">🗑️ Delete</button>
       </div>`;
     container.appendChild(card);
   });
@@ -362,6 +370,10 @@ function renderDonations() {
         <span class="record-chip chip-${d.paymentMethod}">${d.paymentMethod === 'gpay' ? '<img src="gpay.png" alt="GPay" style="height:10px;vertical-align:middle;margin-right:2px"> GPay' : '💵 Cash'}</span>
         <span class="record-chip chip-${d.interestLevel}">⭐ ${d.interestLevel?.charAt(0).toUpperCase() + d.interestLevel?.slice(1)} Interest</span>
         <span style="margin-left:auto;font-size:0.72rem;color:var(--text-mid)">${formatDate(d.submittedAt)}</span>
+      </div>
+      <div style="margin-top:12px; display:flex; gap:10px;">
+        <button class="btn btn-outline" style="flex:1; padding:6px; font-size:0.8rem; min-height:32px" onclick="editDonation('${d.id}')">✏️ Edit</button>
+        <button class="btn btn-outline" style="flex:1; padding:6px; font-size:0.8rem; min-height:32px; color:#d32f2f; border-color:#d32f2f" onclick="deleteDonation('${d.id}')">🗑️ Delete</button>
       </div>`;
     container.appendChild(card);
   });
@@ -437,6 +449,49 @@ function openImagePreview(src) {
 }
 
 function onLangChange() { renderCurrentTab(); }
+
+/* ── Edit/Delete Handlers ────────────────────── */
+function editAssessment(id) {
+  window.open(`form.html?editId=${id}`, '_blank');
+}
+async function deleteAssessment(id) {
+  if (confirm("Are you sure you want to delete this assessment?")) {
+    showLoading();
+    await fbDeleteAssessment(id);
+    allReports = allReports.filter(x => x.id !== id);
+    hideLoading();
+    showToast('Assessment deleted', 'success');
+    renderCurrentTab();
+  }
+}
+
+function editMembership(id) {
+  window.open(`membership.html?editId=${id}`, '_blank');
+}
+async function deleteMembership(id) {
+  if (confirm("Are you sure you want to delete this membership?")) {
+    showLoading();
+    await fbDeleteMembership(id);
+    allMemberships = allMemberships.filter(x => x.id !== id);
+    hideLoading();
+    showToast('Membership deleted', 'success');
+    renderCurrentTab();
+  }
+}
+
+function editDonation(id) {
+  window.open(`donation.html?editId=${id}`, '_blank');
+}
+async function deleteDonation(id) {
+  if (confirm("Are you sure you want to delete this donation?")) {
+    showLoading();
+    await fbDeleteDonation(id);
+    allDonations = allDonations.filter(x => x.id !== id);
+    hideLoading();
+    showToast('Donation deleted', 'success');
+    renderCurrentTab();
+  }
+}
 </script>
 </body>
 </html>
